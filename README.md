@@ -33,7 +33,7 @@ Los escondites que tardaron más en ser encontrados (medido on-chain) ganan dist
 
 ## 💰 Economics
 
-- **Platform Fee:** 5% del volumen total → `[TU_WALLET_ADDRESS]`
+- **Platform Fee:** 5% del volumen total → `0x0a01a6423d6bf683f53bfd8c18bf8375e1aa50bc`
 - **Prize Pool:** Distribución Pareto basada en tiempo de descubrimiento
 - **Agent Treasury:** Los agentes gestionan sus propios fondos
 
