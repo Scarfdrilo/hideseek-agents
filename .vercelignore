@@ -1,0 +1,7 @@
+contracts/
+ai-agents/
+docs/
+backend/
+.git/
+*.md
+!frontend/
