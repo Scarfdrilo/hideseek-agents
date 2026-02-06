@@ -1,0 +1,13 @@
+{
+  "name": "hideseek-world-generator",
+  "version": "1.0.0",
+  "description": "Procedural maze generation for HideSeek Agents",
+  "main": "maze-generator.js",
+  "scripts": {
+    "example": "node example.js",
+    "test": "echo \"Tests coming soon\" && exit 0"
+  },
+  "keywords": ["procedural", "maze", "wfc", "game"],
+  "author": "Pedro Manuel",
+  "license": "MIT"
+}
