@@ -9,7 +9,7 @@ import { Vector3 } from 'three'
 // Import the maze generator
 const generateMaze = () => {
   const size = 21
-  const maze = []
+  const maze: string[][] = []
   
   for (let y = 0; y < size; y++) {
     maze[y] = []
