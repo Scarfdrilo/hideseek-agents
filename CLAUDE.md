@@ -122,6 +122,13 @@ flyctl deploy        # Deploy to Fly.io
 - **Three.js for 3D**: Battle-tested, huge community, better docs than Babylon.js
 - **Socket.io for real-time**: Simpler than raw WebSocket, automatic reconnection, room support
 
+## Patterns That Work
+
+- **Recursive backtracking for mazes**: Fast, always generates connected mazes, natural-looking
+- **Hiding spot detection**: Count adjacent walls — dead ends (3 walls) = best hiding spots
+- **Seeded random generation**: Same seed = same maze, critical for on-chain verification
+- **JSON export for frontend**: Maze as 2D array + hiding spot coordinates, ready for Three.js
+
 ## ⚠️ Known Issues
 
 ⚠️ **BettingPool constructor circular dependency**: GameManager address needed at deploy time, but GameManager needs BettingPool address. Solution: Deploy BettingPool with `address(0)`, then update via setter, OR redeploy BettingPool after GameManager exists.
@@ -132,12 +139,16 @@ flyctl deploy        # Deploy to Fly.io
 
 ⚠️ **Vercel does NOT support WebSocket persistence**: Max 60s function timeout. Backend MUST be on Railway/Fly.io/VPS.
 
+⚠️ **Maze generator maze dimensions**: Use ODD numbers (21x21, 25x25) for recursive backtracking — even numbers create artifacts.
+
 ## Last Commit Log
 
 | Commit | Branch | Summary | Status |
 |--------|--------|---------|--------|
+| Commit | Branch | Summary | Status |
+|--------|--------|---------|--------|
+| `pending` | `feat/phase-2-world-generator` | 🌍 Add procedural maze generator (recursive backtracking + WFC) | 🔨 Working |
+| `4a3d559` | `main` | 📝 Update CLAUDE.md with hosting plan (Vercel frontend + Railway backend) | ✅ Pushed |
 | `95f4ffc` | `main` | 🔧 Add TOOLS.md with repo paths, RPCs, and CLI commands | ✅ Pushed |
 | `50af50f` | `main` | 📋 Add cracked-dev workflow context (CLAUDE.md + stack rules) | ✅ Pushed |
 | `96e531c` | `main` | 🚀 Add deployment script and guide for Monad mainnet | ✅ Pushed |
-| `e9496b0` | `main` | ✨ Add smart contracts (GameManager, BettingPool, RewardDistributor) | ✅ Pushed |
-| `efe154e` | `main` | 🏗️ Add architecture docs and project structure | ✅ Pushed |
