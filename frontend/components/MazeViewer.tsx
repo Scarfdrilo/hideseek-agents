@@ -139,7 +139,7 @@ export default function MazeViewer() {
       
       const spotKey = `${spot.x},${spot.y}`
       if (distance < 1.5 && !foundSpots.has(spotKey)) {
-        setFoundSpots(prev => new Set([...prev, spotKey]))
+        setFoundSpots(prev => new Set(Array.from(prev).concat(spotKey)))
         setScore(prev => prev + 100)
       }
     })
