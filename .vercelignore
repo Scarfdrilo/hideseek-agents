@@ -4,4 +4,3 @@ docs/
 backend/
 .git/
 *.md
-!frontend/
