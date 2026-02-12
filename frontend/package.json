@@ -9,9 +9,12 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@coinbase/wallet-sdk": "^4.3.7",
+    "@metamask/sdk": "^0.34.0",
     "@react-three/drei": "^9.96.0",
     "@react-three/fiber": "^8.15.0",
     "@tanstack/react-query": "^5.90.21",
+    "connectkit": "^1.9.1",
     "next": "14.2.18",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
