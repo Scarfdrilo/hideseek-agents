@@ -5,6 +5,7 @@ import { useAccount } from 'wagmi'
 import AgentCard from './AgentCard'
 import { ConnectWallet } from './ConnectWallet'
 import { useAllAgents, useEnterWorld, useFundAgent, useBirthAgent, useHasPaidEntry, type Agent } from '@/hooks/useAgentsReal'
+import { SeekRewardsPanel } from './SeekRewards'
 
 interface Props {
   onEnterWorld: (agent: Agent) => void
@@ -155,6 +156,11 @@ export default function AgentMarketplace({ onEnterWorld }: Props) {
         <span className="badge-icon">🔐</span>
         <span className="badge-text">ERC-8004 Compliant Agent Identities</span>
         <span className="badge-info">On-chain verifiable • Capability-based • x402 Ready</span>
+      </div>
+
+      {/* $SEEK Rewards */}
+      <div className="seek-rewards-section">
+        <SeekRewardsPanel />
       </div>
 
       {/* Filters */}
@@ -434,6 +440,11 @@ export default function AgentMarketplace({ onEnterWorld }: Props) {
         .badge-icon { font-size: 1.5rem; }
         .badge-text { font-weight: bold; color: #00aaff; }
         .badge-info { color: #888; font-size: 0.85rem; margin-left: auto; }
+
+        .seek-rewards-section {
+          max-width: 1400px;
+          margin: 0 auto 1.5rem;
+        }
 
         .filters {
           max-width: 1400px;
