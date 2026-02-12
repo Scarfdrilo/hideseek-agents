@@ -138,25 +138,14 @@ function Player({ position, movement, onPositionChange }: any) {
   })
 
   return (
-    <group>
-      <mesh ref={meshRef} position={position} castShadow>
-        <capsuleGeometry args={[0.3, 0.8, 8, 16]} />
-        <meshStandardMaterial 
-          color="#00ccff" 
-          emissive="#00aaff" 
-          emissiveIntensity={0.8}
-          transparent
-          opacity={0.95}
-        />
-      </mesh>
-      {/* Player glow light */}
-      <pointLight 
-        position={[position[0], position[1] + 0.5, position[2]]} 
+    <mesh ref={meshRef} position={position}>
+      <capsuleGeometry args={[0.3, 0.8, 4, 8]} />
+      <meshStandardMaterial 
         color="#00ccff" 
-        intensity={0.6} 
-        distance={4} 
+        emissive="#00ccff" 
+        emissiveIntensity={0.5}
       />
-    </group>
+    </mesh>
   )
 }
 
@@ -260,25 +249,18 @@ export default function MazeViewer() {
 
   return (
     <div className="viewer-container">
-      <Canvas shadows>
+      <Canvas shadows={false}>
         <PerspectiveCamera makeDefault position={[10, 8, 18]} fov={60} />
         <CameraRig target={playerPos} />
         
-        {/* Atmospheric fog */}
-        <fog attach="fog" args={['#000811', 5, 35]} />
-        <color attach="background" args={['#000811']} />
+        {/* Simple fog for depth */}
+        <fog attach="fog" args={['#050508', 8, 40]} />
+        <color attach="background" args={['#050508']} />
         
-        {/* Dim ambient for atmosphere */}
-        <ambientLight intensity={0.15} color="#4488aa" />
-        
-        {/* Main lights with neon colors */}
-        <directionalLight position={[10, 15, 5]} intensity={0.3} color="#ffffff" castShadow />
-        <pointLight position={[-8, 6, -8]} intensity={0.5} color="#00ffcc" distance={20} />
-        <pointLight position={[8, 6, 8]} intensity={0.5} color="#ff00ff" distance={20} />
-        <pointLight position={[0, 4, 0]} intensity={0.3} color="#00ff88" distance={15} />
-        
-        {/* Subtle hemisphere light for color bleed */}
-        <hemisphereLight args={['#1a0033', '#001a1a', 0.3]} />
+        {/* Minimal lighting setup - just 3 lights total */}
+        <ambientLight intensity={0.25} color="#aaccff" />
+        <directionalLight position={[5, 10, 5]} intensity={0.4} color="#ffffff" />
+        <hemisphereLight args={['#224466', '#112233', 0.3]} />
         
         <Maze3D data={mazeData} />
         <Player 
@@ -287,10 +269,10 @@ export default function MazeViewer() {
           onPositionChange={setPlayerPos}
         />
         
-        {/* Dark ground plane */}
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.5, 0]} receiveShadow>
-          <planeGeometry args={[100, 100]} />
-          <meshStandardMaterial color="#020205" />
+        {/* Simple ground */}
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.5, 0]}>
+          <planeGeometry args={[60, 60]} />
+          <meshStandardMaterial color="#030305" />
         </mesh>
       </Canvas>
 

@@ -13,283 +13,254 @@ interface MazeProps {
   }
 }
 
-// Glowing neon plant/mushroom
-function NeonPlant({ position, color, scale = 1 }: { position: [number, number, number], color: string, scale?: number }) {
-  const ref = useRef<THREE.Group>(null)
-  const baseIntensity = 0.8 + Math.random() * 0.4
-  
-  useFrame(({ clock }) => {
-    if (ref.current) {
-      // Gentle sway
-      ref.current.rotation.z = Math.sin(clock.elapsedTime * 0.5 + position[0]) * 0.1
-      ref.current.rotation.x = Math.cos(clock.elapsedTime * 0.3 + position[2]) * 0.05
-    }
-  })
-
-  return (
-    <group ref={ref} position={position} scale={scale}>
-      {/* Stem */}
-      <mesh position={[0, 0.2, 0]}>
-        <cylinderGeometry args={[0.02, 0.04, 0.4, 8]} />
-        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.3} />
-      </mesh>
-      {/* Glowing cap/bulb */}
-      <mesh position={[0, 0.45, 0]}>
-        <sphereGeometry args={[0.08, 12, 12]} />
-        <meshStandardMaterial 
-          color={color} 
-          emissive={color} 
-          emissiveIntensity={baseIntensity}
-          transparent
-          opacity={0.9}
-        />
-      </mesh>
-      {/* Point light for glow effect */}
-      <pointLight position={[0, 0.45, 0]} color={color} intensity={0.3} distance={2} />
-    </group>
-  )
+// Biome/zone definitions - different vibes for different areas
+const BIOMES = {
+  neon_core: { wall: '#001122', glow: '#00ffcc', floor: '#0a0a0a' },
+  crystal: { wall: '#110022', glow: '#cc88ff', floor: '#080810' },
+  toxic: { wall: '#0a1100', glow: '#88ff00', floor: '#050800' },
+  ember: { wall: '#110800', glow: '#ff6600', floor: '#0a0500' },
 }
 
-// Floating glowing spore particle
-function Spore({ startPosition }: { startPosition: [number, number, number] }) {
-  const ref = useRef<THREE.Mesh>(null)
-  const speed = 0.2 + Math.random() * 0.3
-  const offset = Math.random() * Math.PI * 2
-  const color = ['#00ffcc', '#ff00ff', '#00ff88', '#ffff00'][Math.floor(Math.random() * 4)]
+// Determine biome based on position (creates organic zones)
+function getBiome(x: number, z: number, width: number, height: number) {
+  const cx = width / 2
+  const cz = height / 2
+  const dx = x - cx
+  const dz = z - cz
+  const angle = Math.atan2(dz, dx)
+  const dist = Math.sqrt(dx * dx + dz * dz)
   
-  useFrame(({ clock }) => {
-    if (ref.current) {
-      ref.current.position.y = startPosition[1] + Math.sin(clock.elapsedTime * speed + offset) * 0.5
-      ref.current.position.x = startPosition[0] + Math.sin(clock.elapsedTime * speed * 0.5 + offset) * 0.3
-      ref.current.position.z = startPosition[2] + Math.cos(clock.elapsedTime * speed * 0.7 + offset) * 0.3
-    }
-  })
-
-  return (
-    <mesh ref={ref} position={startPosition}>
-      <sphereGeometry args={[0.03, 8, 8]} />
-      <meshStandardMaterial 
-        color={color} 
-        emissive={color} 
-        emissiveIntensity={2}
-        transparent
-        opacity={0.8}
-      />
-    </mesh>
-  )
+  // Inner core is neon
+  if (dist < 5) return BIOMES.neon_core
+  
+  // Quadrant-based zones with some noise
+  const noise = Math.sin(x * 0.5) * Math.cos(z * 0.5)
+  if (angle > 0 && angle < Math.PI / 2) return noise > 0.3 ? BIOMES.crystal : BIOMES.neon_core
+  if (angle > Math.PI / 2) return noise > 0.3 ? BIOMES.toxic : BIOMES.crystal
+  if (angle < -Math.PI / 2) return noise > 0.3 ? BIOMES.ember : BIOMES.toxic
+  return noise > 0.3 ? BIOMES.neon_core : BIOMES.ember
 }
 
-// Bioluminescent wall segment
-function NeonWall({ position }: { position: [number, number, number] }) {
-  const ref = useRef<THREE.Mesh>(null)
-  // Random color per wall for variety
-  const colorIndex = Math.floor((position[0] + position[2]) * 100) % 5
-  const colors = ['#001a33', '#0d001a', '#001a1a', '#1a0d00', '#0d0d1a']
-  const glowColors = ['#00ccff', '#cc00ff', '#00ffcc', '#ff6600', '#6666ff']
-  const baseColor = colors[colorIndex]
-  const glowColor = glowColors[colorIndex]
-  
-  useFrame(({ clock }) => {
-    if (ref.current) {
-      const material = ref.current.material as THREE.MeshStandardMaterial
-      material.emissiveIntensity = 0.2 + Math.sin(clock.elapsedTime * 0.5 + position[0]) * 0.1
-    }
-  })
-
-  return (
-    <mesh ref={ref} position={position} castShadow>
-      <boxGeometry args={[1, 2.5, 1]} />
-      <meshStandardMaterial 
-        color={baseColor}
-        emissive={glowColor}
-        emissiveIntensity={0.2}
-        roughness={0.8}
-        metalness={0.2}
-      />
-    </mesh>
-  )
-}
-
-// Glowing floor tile
-function NeonFloor({ position, isStart }: { position: [number, number, number], isStart?: boolean }) {
-  const ref = useRef<THREE.Mesh>(null)
-  const hasVein = Math.random() > 0.7
-  const veinColor = ['#00ff88', '#00ccff', '#ff00cc'][Math.floor(Math.random() * 3)]
-  
-  useFrame(({ clock }) => {
-    if (ref.current && hasVein) {
-      const material = ref.current.material as THREE.MeshStandardMaterial
-      material.emissiveIntensity = 0.1 + Math.sin(clock.elapsedTime + position[0] * position[2]) * 0.05
-    }
-  })
-
-  return (
-    <mesh ref={ref} position={position} receiveShadow>
-      <boxGeometry args={[1, 0.1, 1]} />
-      <meshStandardMaterial 
-        color={isStart ? '#003366' : '#0a0a0a'}
-        emissive={isStart ? '#00aaff' : (hasVein ? veinColor : '#000000')}
-        emissiveIntensity={isStart ? 0.5 : (hasVein ? 0.1 : 0)}
-        roughness={0.9}
-      />
-    </mesh>
-  )
-}
-
-// Hiding spot with pulsing glow
+// Simple pulsing hiding spot
 function HidingSpot({ position }: { position: [number, number, number] }) {
   const ref = useRef<THREE.Mesh>(null)
-  const lightRef = useRef<THREE.PointLight>(null)
+  const glowRef = useRef<THREE.PointLight>(null)
   
   useFrame(({ clock }) => {
     if (ref.current) {
-      const scale = 1 + Math.sin(clock.elapsedTime * 2) * 0.1
-      ref.current.scale.set(scale, scale, scale)
-      const material = ref.current.material as THREE.MeshStandardMaterial
-      material.emissiveIntensity = 0.8 + Math.sin(clock.elapsedTime * 2) * 0.4
+      const pulse = 1 + Math.sin(clock.elapsedTime * 3) * 0.15
+      ref.current.scale.setScalar(pulse)
     }
-    if (lightRef.current) {
-      lightRef.current.intensity = 0.8 + Math.sin(clock.elapsedTime * 2) * 0.3
+    if (glowRef.current) {
+      glowRef.current.intensity = 0.5 + Math.sin(clock.elapsedTime * 3) * 0.2
     }
   })
 
   return (
     <group position={position}>
-      {/* Main orb */}
-      <mesh ref={ref} position={[0, 0.5, 0]}>
-        <dodecahedronGeometry args={[0.35, 0]} />
+      {/* Core gem */}
+      <mesh ref={ref} position={[0, 0.6, 0]}>
+        <octahedronGeometry args={[0.25, 0]} />
         <meshStandardMaterial 
           color="#00ff88" 
           emissive="#00ff88"
-          emissiveIntensity={0.8}
-          transparent
-          opacity={0.9}
-          wireframe={false}
+          emissiveIntensity={0.6}
         />
       </mesh>
-      {/* Inner core */}
-      <mesh position={[0, 0.5, 0]}>
-        <sphereGeometry args={[0.15, 16, 16]} />
-        <meshStandardMaterial 
-          color="#ffffff" 
-          emissive="#ffffff"
-          emissiveIntensity={1}
-        />
-      </mesh>
-      {/* Glow light */}
-      <pointLight ref={lightRef} position={[0, 0.5, 0]} color="#00ff88" intensity={0.8} distance={4} />
-      {/* Particle ring */}
-      {[0, 1, 2, 3, 4, 5].map(i => (
-        <FloatingParticle key={i} center={[0, 0.5, 0]} index={i} />
-      ))}
+      {/* Glow - single light per spot */}
+      <pointLight ref={glowRef} position={[0, 0.6, 0]} color="#00ff88" intensity={0.5} distance={3} />
     </group>
   )
 }
 
-function FloatingParticle({ center, index }: { center: [number, number, number], index: number }) {
-  const ref = useRef<THREE.Mesh>(null)
+// Cute decorations - low poly, no animation
+function Decoration({ position, type, color }: { position: [number, number, number], type: 'mushroom' | 'crystal' | 'flower', color: string }) {
+  if (type === 'mushroom') {
+    return (
+      <group position={position}>
+        <mesh position={[0, 0.12, 0]}>
+          <cylinderGeometry args={[0.03, 0.04, 0.25, 6]} />
+          <meshStandardMaterial color="#886666" />
+        </mesh>
+        <mesh position={[0, 0.28, 0]}>
+          <sphereGeometry args={[0.1, 8, 6, 0, Math.PI * 2, 0, Math.PI / 2]} />
+          <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.4} />
+        </mesh>
+      </group>
+    )
+  }
   
-  useFrame(({ clock }) => {
-    if (ref.current) {
-      const angle = clock.elapsedTime + (index * Math.PI / 3)
-      ref.current.position.x = center[0] + Math.cos(angle) * 0.5
-      ref.current.position.z = center[2] + Math.sin(angle) * 0.5
-      ref.current.position.y = center[1] + Math.sin(clock.elapsedTime * 2 + index) * 0.2
-    }
-  })
-
+  if (type === 'crystal') {
+    return (
+      <mesh position={[position[0], position[1] + 0.2, position[2]]} rotation={[0, Math.random() * Math.PI, 0]}>
+        <coneGeometry args={[0.08, 0.4, 4]} />
+        <meshStandardMaterial 
+          color={color} 
+          emissive={color} 
+          emissiveIntensity={0.3}
+          transparent
+          opacity={0.8}
+        />
+      </mesh>
+    )
+  }
+  
+  // flower
   return (
-    <mesh ref={ref}>
-      <sphereGeometry args={[0.04, 8, 8]} />
-      <meshStandardMaterial 
-        color="#88ffcc"
-        emissive="#88ffcc"
-        emissiveIntensity={1}
-        transparent
-        opacity={0.7}
-      />
-    </mesh>
+    <group position={position}>
+      <mesh position={[0, 0.1, 0]}>
+        <cylinderGeometry args={[0.01, 0.015, 0.2, 4]} />
+        <meshStandardMaterial color="#446644" />
+      </mesh>
+      <mesh position={[0, 0.22, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[0.06, 5]} />
+        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.5} side={THREE.DoubleSide} />
+      </mesh>
+    </group>
   )
 }
 
 export default function Maze3D({ data }: MazeProps) {
-  const { maze, width, height } = data
+  const { maze, width, height, hidingSpots } = data
 
   const elements = useMemo(() => {
     const walls: JSX.Element[] = []
     const floors: JSX.Element[] = []
     const spots: JSX.Element[] = []
-    const plants: JSX.Element[] = []
-    const spores: JSX.Element[] = []
-
-    const plantColors = ['#00ff88', '#00ccff', '#ff00ff', '#ffcc00', '#ff6666']
+    const decorations: JSX.Element[] = []
+    
+    // Track special areas
+    const deadEnds: [number, number][] = []
+    const intersections: [number, number][] = []
 
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
         const tile = maze[y][x]
         const posX = x - width / 2
         const posZ = y - height / 2
+        const biome = getBiome(x, y, width, height)
 
         if (tile === 'WALL') {
+          // Varied wall heights for interest
+          const wallHeight = 2 + Math.sin(x * 0.7 + y * 0.5) * 0.5
+          
           walls.push(
-            <NeonWall key={`wall-${x}-${y}`} position={[posX, 1.25, posZ]} />
+            <mesh key={`wall-${x}-${y}`} position={[posX, wallHeight / 2, posZ]} castShadow>
+              <boxGeometry args={[1, wallHeight, 1]} />
+              <meshStandardMaterial 
+                color={biome.wall}
+                emissive={biome.glow}
+                emissiveIntensity={0.08}
+              />
+            </mesh>
           )
           
-          // Add plants on top of some walls
-          if (Math.random() > 0.7) {
-            const plantColor = plantColors[Math.floor(Math.random() * plantColors.length)]
-            plants.push(
-              <NeonPlant 
-                key={`plant-${x}-${y}`} 
-                position={[posX + (Math.random() - 0.5) * 0.5, 2.5, posZ + (Math.random() - 0.5) * 0.5]} 
-                color={plantColor}
-                scale={0.8 + Math.random() * 0.6}
-              />
+          // Edge glow lines (top of walls) - sparse
+          if ((x + y) % 4 === 0) {
+            walls.push(
+              <mesh key={`edge-${x}-${y}`} position={[posX, wallHeight, posZ]}>
+                <boxGeometry args={[0.95, 0.05, 0.95]} />
+                <meshStandardMaterial 
+                  color={biome.glow}
+                  emissive={biome.glow}
+                  emissiveIntensity={0.5}
+                />
+              </mesh>
             )
           }
-        } else if (tile === 'FLOOR' || tile === 'START') {
+        } else {
+          // Floor
           floors.push(
-            <NeonFloor 
-              key={`floor-${x}-${y}`} 
-              position={[posX, 0, posZ]} 
-              isStart={tile === 'START'} 
-            />
+            <mesh key={`floor-${x}-${y}`} position={[posX, 0, posZ]} receiveShadow>
+              <boxGeometry args={[1, 0.1, 1]} />
+              <meshStandardMaterial color={biome.floor} />
+            </mesh>
           )
           
-          // Scatter some floor plants
-          if (Math.random() > 0.9 && tile === 'FLOOR') {
-            const plantColor = plantColors[Math.floor(Math.random() * plantColors.length)]
-            plants.push(
-              <NeonPlant 
-                key={`fplant-${x}-${y}`} 
-                position={[posX + (Math.random() - 0.5) * 0.6, 0.05, posZ + (Math.random() - 0.5) * 0.6]} 
-                color={plantColor}
-                scale={0.5 + Math.random() * 0.3}
-              />
+          // Count adjacent floor tiles to detect dead ends & intersections
+          let adjacentFloors = 0
+          const dirs = [[0, -1], [0, 1], [-1, 0], [1, 0]]
+          dirs.forEach(([dx, dy]) => {
+            const nx = x + dx
+            const ny = y + dy
+            if (nx >= 0 && nx < width && ny >= 0 && ny < height && maze[ny][nx] !== 'WALL') {
+              adjacentFloors++
+            }
+          })
+          
+          if (adjacentFloors === 1 && tile === 'FLOOR') {
+            deadEnds.push([x, y])
+          } else if (adjacentFloors >= 3 && tile === 'FLOOR') {
+            intersections.push([x, y])
+          }
+          
+          // Add decorations at interesting spots
+          if (tile === 'FLOOR') {
+            const decorChance = Math.random()
+            const biomeColors = [biome.glow, '#ff88cc', '#88ffcc', '#ffcc88']
+            const color = biomeColors[Math.floor(Math.random() * biomeColors.length)]
+            
+            // Dead ends get special decoration
+            if (adjacentFloors === 1 && decorChance > 0.3) {
+              decorations.push(
+                <Decoration 
+                  key={`dec-${x}-${y}`}
+                  position={[posX + (Math.random() - 0.5) * 0.4, 0.05, posZ + (Math.random() - 0.5) * 0.4]}
+                  type="crystal"
+                  color={color}
+                />
+              )
+            }
+            // Intersections sometimes get mushrooms
+            else if (adjacentFloors >= 3 && decorChance > 0.7) {
+              decorations.push(
+                <Decoration 
+                  key={`dec-${x}-${y}`}
+                  position={[posX + (Math.random() - 0.5) * 0.3, 0.05, posZ + (Math.random() - 0.5) * 0.3]}
+                  type="mushroom"
+                  color={color}
+                />
+              )
+            }
+            // Scattered flowers
+            else if (decorChance > 0.92) {
+              decorations.push(
+                <Decoration 
+                  key={`dec-${x}-${y}`}
+                  position={[posX + (Math.random() - 0.5) * 0.5, 0.05, posZ + (Math.random() - 0.5) * 0.5]}
+                  type="flower"
+                  color={color}
+                />
+              )
+            }
+          }
+          
+          // Hiding spots
+          if (tile === 'HIDING_SPOT') {
+            spots.push(
+              <HidingSpot key={`spot-${x}-${y}`} position={[posX, 0, posZ]} />
             )
           }
           
-          // Add floating spores in open areas
-          if (Math.random() > 0.85) {
-            spores.push(
-              <Spore 
-                key={`spore-${x}-${y}`} 
-                startPosition={[posX, 1 + Math.random() * 2, posZ]} 
-              />
+          // Start position marker
+          if (tile === 'START') {
+            floors.push(
+              <mesh key={`start-glow-${x}-${y}`} position={[posX, 0.06, posZ]}>
+                <ringGeometry args={[0.3, 0.4, 16]} />
+                <meshStandardMaterial 
+                  color="#00aaff" 
+                  emissive="#00aaff"
+                  emissiveIntensity={0.8}
+                  side={THREE.DoubleSide}
+                />
+              </mesh>
             )
           }
-        } else if (tile === 'HIDING_SPOT') {
-          floors.push(
-            <NeonFloor key={`floor-${x}-${y}`} position={[posX, 0, posZ]} />
-          )
-          spots.push(
-            <HidingSpot key={`spot-${x}-${y}`} position={[posX, 0, posZ]} />
-          )
         }
       }
     }
 
-    return { walls, floors, spots, plants, spores }
+    return { walls, floors, spots, decorations }
   }, [maze, width, height])
 
   return (
@@ -297,8 +268,7 @@ export default function Maze3D({ data }: MazeProps) {
       {elements.walls}
       {elements.floors}
       {elements.spots}
-      {elements.plants}
-      {elements.spores}
+      {elements.decorations}
     </group>
   )
 }
