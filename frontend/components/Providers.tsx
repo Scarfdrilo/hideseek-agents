@@ -1,10 +1,11 @@
 'use client'
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { WagmiProvider, createConfig, http } from 'wagmi'
+import { WagmiProvider } from 'wagmi'
 import { ConnectKitProvider, getDefaultConfig } from 'connectkit'
 import { useState, type ReactNode } from 'react'
 import { monad, REOWN_PROJECT_ID } from '@/lib/wagmi'
+import { createConfig, http } from 'wagmi'
 
 // Wagmi config with ConnectKit
 const wagmiConfig = createConfig(

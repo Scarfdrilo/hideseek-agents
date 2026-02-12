@@ -1,5 +1,4 @@
-import { http, createConfig } from 'wagmi'
-import { createPublicClient, defineChain } from 'viem'
+import { defineChain } from 'viem'
 
 // Define Monad chain
 export const monad = defineChain({
@@ -23,25 +22,11 @@ export const monad = defineChain({
   },
 })
 
-// Wagmi config (connectors added by Reown AppKit)
-export const config = createConfig({
-  chains: [monad],
-  transports: {
-    [monad.id]: http(),
-  },
-})
-
-// Public client for reads
-export const publicClient = createPublicClient({
-  chain: monad,
-  transport: http(),
-})
+// Reown Project ID
+export const REOWN_PROJECT_ID = process.env.NEXT_PUBLIC_REOWN_PROJECT_ID || 'demo'
 
 // Contract address
 export const AGENT_REGISTRY = '0x8057355a60008AD9AdBaFEF0fB8F78573cEC3BA4' as const
-
-// Reown Project ID - get yours at https://cloud.reown.com
-export const REOWN_PROJECT_ID = process.env.NEXT_PUBLIC_REOWN_PROJECT_ID || '8b4e10f8e76da73a09f5f7e8c3c3a8d2'
 
 // ABI for the optimized contract
 export const AGENT_REGISTRY_ABI = [
