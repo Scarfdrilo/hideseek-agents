@@ -176,6 +176,7 @@ export default function MazeViewer() {
   const [movement, setMovement] = useState({ forward: 0, right: 0 })
   const [score, setScore] = useState(0)
   const [foundSpots, setFoundSpots] = useState<Set<string>>(new Set())
+  const [quality, setQuality] = useState<'auto' | 'low' | 'high'>('auto')
   const keysPressed = useRef<Set<string>>(new Set())
 
   useEffect(() => {
@@ -247,20 +248,25 @@ export default function MazeViewer() {
 
   const allSpotsFound = foundSpots.size === mazeData.hidingSpots.length
 
+  // Quality settings - auto detects mobile
+  const effectiveQuality = quality === 'auto' ? (isMobile ? 'low' : 'high') : quality
+  const useFog = effectiveQuality === 'high'
+  const lightIntensity = effectiveQuality === 'high' ? 0.4 : 0.25
+
   return (
     <div className="viewer-container">
       <Canvas shadows={false}>
         <PerspectiveCamera makeDefault position={[10, 8, 18]} fov={60} />
         <CameraRig target={playerPos} />
         
-        {/* Simple fog for depth */}
-        <fog attach="fog" args={['#050508', 8, 40]} />
+        {/* Fog for depth - skip on low quality */}
+        {useFog && <fog attach="fog" args={['#050508', 8, 40]} />}
         <color attach="background" args={['#050508']} />
         
-        {/* Minimal lighting setup - just 3 lights total */}
-        <ambientLight intensity={0.25} color="#aaccff" />
-        <directionalLight position={[5, 10, 5]} intensity={0.4} color="#ffffff" />
-        <hemisphereLight args={['#224466', '#112233', 0.3]} />
+        {/* Lighting - reduced on low quality */}
+        <ambientLight intensity={effectiveQuality === 'high' ? 0.25 : 0.35} color="#aaccff" />
+        <directionalLight position={[5, 10, 5]} intensity={lightIntensity} color="#ffffff" />
+        {effectiveQuality === 'high' && <hemisphereLight args={['#224466', '#112233', 0.3]} />}
         
         <Maze3D data={mazeData} />
         <Player 
@@ -314,6 +320,18 @@ export default function MazeViewer() {
                 <p>🎯 Encuentra los puntos verdes</p>
               </>
             )}
+          </div>
+          <div className="quality-toggle">
+            <p><strong>Calidad:</strong></p>
+            <select 
+              value={quality} 
+              onChange={(e) => setQuality(e.target.value as 'auto' | 'low' | 'high')}
+              className="quality-select"
+            >
+              <option value="auto">Auto</option>
+              <option value="low">🔋 Lite (móvil)</option>
+              <option value="high">✨ Full</option>
+            </select>
           </div>
         </div>
       )}
@@ -439,6 +457,34 @@ export default function MazeViewer() {
 
         .controls p {
           margin: 0.25rem 0;
+        }
+
+        .quality-toggle {
+          margin-top: 1rem;
+          padding-top: 1rem;
+          border-top: 1px solid #333;
+        }
+
+        .quality-toggle p {
+          color: #888;
+          font-size: 0.85rem;
+          margin-bottom: 0.5rem;
+        }
+
+        .quality-select {
+          width: 100%;
+          padding: 0.5rem;
+          background: #222;
+          border: 1px solid #00ff88;
+          border-radius: 5px;
+          color: #00ff88;
+          font-size: 0.9rem;
+          cursor: pointer;
+        }
+
+        .quality-select:focus {
+          outline: none;
+          border-color: #00ffcc;
         }
       `}</style>
     </div>
