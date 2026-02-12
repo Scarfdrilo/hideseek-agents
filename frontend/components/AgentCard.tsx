@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { type Agent } from '@/hooks/useAgentsReal'
+import { type Agent, useHasPaidEntry } from '@/hooks/useAgentsReal'
 
 const WORLD_STYLES: Record<string, { gradient: string; emoji: string; description: string }> = {
   crystal: {
@@ -39,7 +39,7 @@ export default function AgentCard({
   isPending = false
 }: { 
   agent: Agent
-  onEnterWorld: (agent: Agent) => void
+  onEnterWorld: (agent: Agent, hasPaid: boolean) => void
   onFund: (agent: Agent, amount: number) => void
   onRevive: (agent: Agent) => void
   isPending?: boolean
@@ -48,6 +48,9 @@ export default function AgentCard({
   const [isHovered, setIsHovered] = useState(false)
   const [showFundModal, setShowFundModal] = useState(false)
   const [fundAmount, setFundAmount] = useState('0.01')
+  
+  // Check if user already paid for this agent
+  const { hasPaid, isLoading: checkingPaid } = useHasPaidEntry(agent.id)
   
   const style = WORLD_STYLES[agent.worldStyle] || WORLD_STYLES.crystal
   const isActive = agent.state === 'Active'
@@ -141,10 +144,12 @@ export default function AgentCard({
             {isActive ? (
               <>
                 <button 
-                  className="btn-primary"
-                  onClick={() => onEnterWorld(agent)}
+                  className={`btn-primary ${hasPaid ? 'free-entry' : ''}`}
+                  onClick={() => onEnterWorld(agent, hasPaid || false)}
+                  disabled={checkingPaid}
                 >
-                  🚀 Enter World
+                  {checkingPaid ? '⏳ Checking...' : 
+                   hasPaid ? '🎮 Enter Free' : `🚀 Enter (${agent.entryFee} MON)`}
                 </button>
                 <button 
                   className="btn-secondary"
@@ -353,6 +358,16 @@ export default function AgentCard({
           .btn-primary:hover {
             background: #00cc6a;
             transform: scale(1.02);
+          }
+
+          .btn-primary.free-entry {
+            background: linear-gradient(135deg, #00ff88, #00aaff);
+            animation: freeGlow 2s infinite;
+          }
+
+          @keyframes freeGlow {
+            0%, 100% { box-shadow: 0 0 10px rgba(0, 255, 136, 0.3); }
+            50% { box-shadow: 0 0 20px rgba(0, 170, 255, 0.5); }
           }
 
           .btn-secondary {

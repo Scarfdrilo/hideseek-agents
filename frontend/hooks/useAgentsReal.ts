@@ -105,23 +105,48 @@ export function useAllAgents() {
   }
 }
 
-// Enter world (pay entry fee)
+// Check if user has already paid entry
+export function useHasPaidEntry(agentId: number) {
+  const { address } = useAccount()
+  
+  const { data, isLoading, refetch } = useReadContract({
+    address: AGENT_REGISTRY,
+    abi: AGENT_REGISTRY_ABI,
+    functionName: 'hasPaidEntry',
+    args: address ? [BigInt(agentId), address] : undefined,
+    chainId: monad.id,
+    query: {
+      enabled: !!address && agentId > 0,
+    },
+  })
+
+  return {
+    hasPaid: data as boolean | undefined,
+    isLoading,
+    refetch,
+  }
+}
+
+// Enter world (pay entry fee - or free if already paid)
 export function useEnterWorld() {
   const { address } = useAccount()
   const { writeContract, data: hash, isPending, error } = useWriteContract()
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash })
 
-  const enterWorld = async (agentId: number, entryFee: number) => {
+  const enterWorld = async (agentId: number, entryFee: number, alreadyPaid: boolean = false) => {
     if (!address) {
       throw new Error('Wallet not connected')
     }
+    
+    // If already paid, enter for free
+    const value = alreadyPaid ? BigInt(0) : parseEther(entryFee.toString())
     
     writeContract({
       address: AGENT_REGISTRY,
       abi: AGENT_REGISTRY_ABI,
       functionName: 'enterWorld',
       args: [BigInt(agentId)],
-      value: parseEther(entryFee.toString()),
+      value,
       chainId: monad.id,
     })
   }

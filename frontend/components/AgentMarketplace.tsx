@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useAccount } from 'wagmi'
 import AgentCard from './AgentCard'
 import { ConnectWallet } from './ConnectWallet'
-import { useAllAgents, useEnterWorld, useFundAgent, useBirthAgent, type Agent } from '@/hooks/useAgentsReal'
+import { useAllAgents, useEnterWorld, useFundAgent, useBirthAgent, useHasPaidEntry, type Agent } from '@/hooks/useAgentsReal'
 
 interface Props {
   onEnterWorld: (agent: Agent) => void
@@ -45,17 +45,18 @@ export default function AgentMarketplace({ onEnterWorld }: Props) {
     return handleFund(agent, 0.01)
   }
 
-  const handleEnterWorld = async (agent: Agent) => {
+  const handleEnterWorld = async (agent: Agent, hasPaid: boolean = false) => {
     if (!isConnected) {
       showNotification('🔗 Connect wallet to enter worlds!')
       return
     }
     
     setPendingAgent(agent)
-    showNotification(`🎮 Entering ${agent.name}'s world... (${agent.entryFee} MON)`)
+    const feeMsg = hasPaid ? 'FREE re-entry!' : `${agent.entryFee} MON`
+    showNotification(`🎮 Entering ${agent.name}'s world... (${feeMsg})`)
     
     try {
-      await enterWorld(agent.id, agent.entryFee)
+      await enterWorld(agent.id, agent.entryFee, hasPaid)
       // Will navigate after tx confirms
     } catch (err: any) {
       showNotification(`❌ ${err.message || 'Failed to enter'}`)
