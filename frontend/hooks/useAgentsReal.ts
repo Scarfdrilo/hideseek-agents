@@ -63,19 +63,43 @@ export function useAgent(agentId: number) {
   return { agent, isLoading, error, refetch }
 }
 
-// Get all agents
+// Get all agents (fetches up to MAX_AGENTS)
 export function useAllAgents() {
-  const { data: count, isLoading: countLoading } = useAgentCount()
+  const { data: count, isLoading: countLoading, refetch: refetchCount } = useAgentCount()
   const agentCount = count ? Number(count) : 0
   
-  // For now just get agent 1 (genesis) - in production would loop
-  const { agent: agent1, isLoading: agent1Loading, refetch } = useAgent(1)
+  // Fetch multiple agents - adjust based on count
+  const MAX_FETCH = 10 // Limit to prevent too many calls
   
-  const agents: Agent[] = agent1 ? [agent1] : []
+  const agent1 = useAgent(1)
+  const agent2 = useAgent(2)
+  const agent3 = useAgent(3)
+  const agent4 = useAgent(4)
+  const agent5 = useAgent(5)
+  const agent6 = useAgent(6)
+  const agent7 = useAgent(7)
+  const agent8 = useAgent(8)
+  const agent9 = useAgent(9)
+  const agent10 = useAgent(10)
+  
+  const allAgentHooks = [agent1, agent2, agent3, agent4, agent5, agent6, agent7, agent8, agent9, agent10]
+  
+  // Filter to only include agents that exist (up to agentCount)
+  const agents: Agent[] = allAgentHooks
+    .slice(0, Math.min(agentCount, MAX_FETCH))
+    .map(h => h.agent)
+    .filter((a): a is Agent => a !== null && a.name !== '')
+  
+  const isLoading = countLoading || allAgentHooks.slice(0, agentCount).some(h => h.isLoading)
+  
+  const refetch = () => {
+    refetchCount()
+    allAgentHooks.forEach(h => h.refetch())
+  }
   
   return {
     agents,
-    isLoading: countLoading || agent1Loading,
+    isLoading,
     count: agentCount,
     refetch,
   }
