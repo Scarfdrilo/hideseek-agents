@@ -1,14 +1,14 @@
 import AgentRegistryABI from './AgentRegistryABI.json'
 
-// Contract addresses - update after deployment
+// Contract addresses - DEPLOYED ON MONAD!
 export const CONTRACTS = {
-  // Monad Testnet
-  testnet: {
-    AgentRegistry: '0x0000000000000000000000000000000000000000' as `0x${string}`,
-  },
-  // Monad Mainnet
+  // Monad Mainnet (Chain 143)
   mainnet: {
-    AgentRegistry: '0x0000000000000000000000000000000000000000' as `0x${string}`,
+    AgentRegistry: '0x8057355a60008AD9AdBaFEF0fB8F78573cEC3BA4' as `0x${string}`,
+  },
+  // Monad Testnet (if needed)
+  testnet: {
+    AgentRegistry: '0x8057355a60008AD9AdBaFEF0fB8F78573cEC3BA4' as `0x${string}`,
   }
 }
 
@@ -24,11 +24,11 @@ export const ABIS = {
   AgentRegistry: AgentRegistryABI,
 }
 
-// Chain config for Monad
+// Chain config for Monad Mainnet
 export const MONAD_CHAIN = {
-  id: 10242, // Monad testnet chain ID (placeholder)
-  name: 'Monad Testnet',
-  network: 'monad-testnet',
+  id: 143,
+  name: 'Monad',
+  network: 'monad',
   nativeCurrency: {
     decimals: 18,
     name: 'MON',
@@ -36,16 +36,16 @@ export const MONAD_CHAIN = {
   },
   rpcUrls: {
     default: {
-      http: ['https://testnet.monad.xyz'],
+      http: ['https://rpc.monad.xyz'],
     },
     public: {
-      http: ['https://testnet.monad.xyz'],
+      http: ['https://rpc.monad.xyz'],
     },
   },
   blockExplorers: {
     default: {
       name: 'Monad Explorer',
-      url: 'https://explorer.testnet.monad.xyz',
+      url: 'https://explorer.monad.xyz',
     },
   },
 }
