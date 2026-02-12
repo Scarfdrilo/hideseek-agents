@@ -2,19 +2,7 @@
 
 import { useState, useEffect } from 'react'
 
-interface Agent {
-  id: number
-  name: string
-  worldStyle: string
-  personality: string
-  balance: number // in ETH
-  totalEarnings: number
-  totalVisitors: number
-  entryFee: number
-  rewardPercent: number
-  state: 'Active' | 'Dormant' | 'Retired'
-  creator: string
-}
+import { Agent } from '@/lib/contracts'
 
 const WORLD_STYLES: Record<string, { gradient: string; emoji: string; description: string }> = {
   crystal: {

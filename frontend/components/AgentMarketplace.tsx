@@ -2,140 +2,55 @@
 
 import { useState, useEffect } from 'react'
 import AgentCard from './AgentCard'
-
-interface Agent {
-  id: number
-  name: string
-  worldStyle: string
-  personality: string
-  balance: number
-  totalEarnings: number
-  totalVisitors: number
-  entryFee: number
-  rewardPercent: number
-  state: 'Active' | 'Dormant' | 'Retired'
-  creator: string
-}
-
-// Demo agents for MVP
-const DEMO_AGENTS: Agent[] = [
-  {
-    id: 1,
-    name: 'Prisma',
-    worldStyle: 'crystal',
-    personality: 'A serene, wise entity that speaks in riddles and values patience',
-    balance: 0.045,
-    totalEarnings: 1.23,
-    totalVisitors: 156,
-    entryFee: 0.005,
-    rewardPercent: 70,
-    state: 'Active',
-    creator: '0x1234...5678'
-  },
-  {
-    id: 2,
-    name: 'Neon',
-    worldStyle: 'neon_jungle',
-    personality: 'Energetic and playful, loves to challenge visitors with speed runs',
-    balance: 0.082,
-    totalEarnings: 2.45,
-    totalVisitors: 312,
-    entryFee: 0.003,
-    rewardPercent: 80,
-    state: 'Active',
-    creator: '0xabcd...efgh'
-  },
-  {
-    id: 3,
-    name: 'Void Walker',
-    worldStyle: 'void_realm',
-    personality: 'Mysterious and challenging, rewards only the most dedicated explorers',
-    balance: 0.002,
-    totalEarnings: 0.89,
-    totalVisitors: 67,
-    entryFee: 0.01,
-    rewardPercent: 50,
-    state: 'Dormant',
-    creator: '0x9876...5432'
-  },
-  {
-    id: 4,
-    name: 'Aurora',
-    worldStyle: 'rainbow',
-    personality: 'Chaotic and unpredictable, every visit is a unique experience',
-    balance: 0.067,
-    totalEarnings: 3.12,
-    totalVisitors: 423,
-    entryFee: 0.002,
-    rewardPercent: 90,
-    state: 'Active',
-    creator: '0xfedc...ba98'
-  },
-  {
-    id: 5,
-    name: 'Helix',
-    worldStyle: 'organic_maze',
-    personality: 'Nurturing but challenging, grows its maze based on visitor behavior',
-    balance: 0.031,
-    totalEarnings: 1.78,
-    totalVisitors: 198,
-    entryFee: 0.004,
-    rewardPercent: 75,
-    state: 'Active',
-    creator: '0x1111...2222'
-  }
-]
+import { useAgents } from '@/hooks/useAgents'
+import { Agent } from '@/lib/contracts'
 
 interface Props {
   onEnterWorld: (agent: Agent) => void
 }
 
 export default function AgentMarketplace({ onEnterWorld }: Props) {
-  const [agents, setAgents] = useState<Agent[]>(DEMO_AGENTS)
+  const { agents, loading, error, isDemo, fundAgent, reviveAgent, enterWorld } = useAgents()
   const [filter, setFilter] = useState<'all' | 'active' | 'dormant'>('all')
   const [sortBy, setSortBy] = useState<'visitors' | 'earnings' | 'balance'>('visitors')
   const [notification, setNotification] = useState<string | null>(null)
   
-  // Simulate life force decreasing over time
+  // Watch for dormancy events
   useEffect(() => {
-    const interval = setInterval(() => {
-      setAgents(prev => prev.map(agent => {
-        if (agent.state !== 'Active') return agent
-        
-        const burnRate = 0.0001 // per 5 seconds for demo
-        const newBalance = Math.max(0, agent.balance - burnRate)
-        
-        // Check for dormancy
-        if (newBalance < 0.001 && agent.state === 'Active') {
-          setNotification(`💀 ${agent.name} has gone dormant!`)
-          setTimeout(() => setNotification(null), 3000)
-          return { ...agent, balance: newBalance, state: 'Dormant' as const }
-        }
-        
-        return { ...agent, balance: newBalance }
-      }))
-    }, 5000)
-    
-    return () => clearInterval(interval)
-  }, [])
+    const dormantAgents = agents.filter(a => a.state === 'Dormant')
+    // Could show notifications here
+  }, [agents])
 
-  const handleFund = (agent: Agent, amount: number) => {
-    setAgents(prev => prev.map(a => {
-      if (a.id !== agent.id) return a
-      const newBalance = a.balance + amount
-      const newState = newBalance >= 0.001 ? 'Active' : a.state
-      
-      if (a.state === 'Dormant' && newState === 'Active') {
-        setNotification(`✨ ${a.name} has been revived!`)
+  const handleFund = async (agent: Agent, amount: number) => {
+    try {
+      await fundAgent(agent.id, amount)
+      if (agent.state === 'Dormant') {
+        setNotification(`✨ ${agent.name} has been revived!`)
+        setTimeout(() => setNotification(null), 3000)
+      } else {
+        setNotification(`💰 Funded ${agent.name} with ${amount} MON`)
         setTimeout(() => setNotification(null), 3000)
       }
-      
-      return { ...a, balance: newBalance, state: newState as any }
-    }))
+    } catch (err) {
+      setNotification(`❌ Failed to fund agent`)
+      setTimeout(() => setNotification(null), 3000)
+    }
   }
 
-  const handleRevive = (agent: Agent) => {
-    handleFund(agent, 0.01)
+  const handleRevive = async (agent: Agent) => {
+    try {
+      await reviveAgent(agent.id)
+      setNotification(`✨ ${agent.name} has been revived!`)
+      setTimeout(() => setNotification(null), 3000)
+    } catch (err) {
+      setNotification(`❌ Failed to revive agent`)
+      setTimeout(() => setNotification(null), 3000)
+    }
+  }
+
+  const handleEnterWorld = async (agent: Agent) => {
+    await enterWorld(agent.id)
+    onEnterWorld(agent)
   }
 
   const filteredAgents = agents
@@ -150,6 +65,38 @@ export default function AgentMarketplace({ onEnterWorld }: Props) {
   const totalDormant = agents.filter(a => a.state === 'Dormant').length
   const totalEconomy = agents.reduce((sum, a) => sum + a.balance, 0)
 
+  if (loading) {
+    return (
+      <div className="loading-container">
+        <div className="loader"></div>
+        <p>Loading agents from chain...</p>
+        <style jsx>{`
+          .loading-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #0a0a0a;
+            gap: 1rem;
+          }
+          .loader {
+            width: 50px;
+            height: 50px;
+            border: 3px solid #222;
+            border-top-color: #00ff88;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+          }
+          @keyframes spin {
+            to { transform: rotate(360deg); }
+          }
+          p { color: #888; }
+        `}</style>
+      </div>
+    )
+  }
+
   return (
     <div className="marketplace">
       {/* Header */}
@@ -157,6 +104,9 @@ export default function AgentMarketplace({ onEnterWorld }: Props) {
         <div className="title-section">
           <h1>🌐 Agent Worlds</h1>
           <p>Explore autonomous worlds, earn rewards, keep agents alive</p>
+          {isDemo && (
+            <span className="demo-badge">🎮 Demo Mode - Contract Not Deployed</span>
+          )}
         </div>
         
         {/* Global Stats */}
@@ -174,6 +124,13 @@ export default function AgentMarketplace({ onEnterWorld }: Props) {
             <span className="stat-label">Total MON</span>
           </div>
         </div>
+      </div>
+
+      {/* ERC-8004 Badge */}
+      <div className="erc-badge">
+        <span className="badge-icon">🔐</span>
+        <span className="badge-text">ERC-8004 Compliant Agent Identities</span>
+        <span className="badge-info">On-chain verifiable • Capability-based • x402 Ready</span>
       </div>
 
       {/* Filters */}
@@ -215,7 +172,7 @@ export default function AgentMarketplace({ onEnterWorld }: Props) {
           <AgentCard
             key={agent.id}
             agent={agent}
-            onEnterWorld={onEnterWorld}
+            onEnterWorld={handleEnterWorld}
             onFund={handleFund}
             onRevive={handleRevive}
           />
@@ -227,7 +184,14 @@ export default function AgentMarketplace({ onEnterWorld }: Props) {
         <div className="cta-content">
           <h3>🐣 Birth a New Agent</h3>
           <p>Create your own autonomous world with a unique personality</p>
-          <button className="btn-birth">Coming Soon</button>
+          <div className="cta-details">
+            <span>🔐 ERC-8004 Identity</span>
+            <span>💰 0.01 MON minimum</span>
+            <span>🎨 Custom world style</span>
+          </div>
+          <button className="btn-birth" disabled={isDemo}>
+            {isDemo ? 'Deploy Contract First' : 'Birth Agent'}
+          </button>
         </div>
       </div>
 
@@ -247,7 +211,7 @@ export default function AgentMarketplace({ onEnterWorld }: Props) {
 
         .header {
           max-width: 1400px;
-          margin: 0 auto 2rem;
+          margin: 0 auto 1rem;
           display: flex;
           justify-content: space-between;
           align-items: flex-start;
@@ -267,6 +231,17 @@ export default function AgentMarketplace({ onEnterWorld }: Props) {
         .title-section p {
           color: #888;
           font-size: 1.1rem;
+        }
+
+        .demo-badge {
+          display: inline-block;
+          margin-top: 0.5rem;
+          padding: 0.25rem 0.75rem;
+          background: rgba(255, 170, 0, 0.2);
+          border: 1px solid #ffaa00;
+          border-radius: 4px;
+          color: #ffaa00;
+          font-size: 0.8rem;
         }
 
         .global-stats {
@@ -300,6 +275,33 @@ export default function AgentMarketplace({ onEnterWorld }: Props) {
         .global-stat .stat-label {
           font-size: 0.8rem;
           color: #666;
+        }
+
+        .erc-badge {
+          max-width: 1400px;
+          margin: 0 auto 1.5rem;
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          padding: 0.75rem 1.5rem;
+          background: linear-gradient(135deg, rgba(0, 170, 255, 0.1), rgba(138, 43, 226, 0.1));
+          border: 1px solid rgba(0, 170, 255, 0.3);
+          border-radius: 8px;
+        }
+
+        .badge-icon {
+          font-size: 1.5rem;
+        }
+
+        .badge-text {
+          font-weight: bold;
+          color: #00aaff;
+        }
+
+        .badge-info {
+          color: #888;
+          font-size: 0.85rem;
+          margin-left: auto;
         }
 
         .filters {
@@ -382,15 +384,35 @@ export default function AgentMarketplace({ onEnterWorld }: Props) {
           margin-bottom: 1rem;
         }
 
+        .cta-details {
+          display: flex;
+          justify-content: center;
+          gap: 2rem;
+          margin-bottom: 1.5rem;
+          color: #666;
+          font-size: 0.9rem;
+        }
+
         .btn-birth {
           padding: 0.75rem 2rem;
-          background: transparent;
-          border: 1px solid var(--primary);
+          background: var(--primary);
+          border: none;
           border-radius: 8px;
-          color: var(--primary);
+          color: #000;
           font-weight: bold;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .btn-birth:disabled {
+          background: #333;
+          color: #666;
           cursor: not-allowed;
-          opacity: 0.5;
+        }
+
+        .btn-birth:not(:disabled):hover {
+          transform: scale(1.02);
+          box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
         }
 
         .notification {
@@ -434,6 +456,21 @@ export default function AgentMarketplace({ onEnterWorld }: Props) {
 
           .title-section h1 {
             font-size: 1.8rem;
+          }
+
+          .erc-badge {
+            flex-wrap: wrap;
+          }
+
+          .badge-info {
+            width: 100%;
+            margin-left: 0;
+            margin-top: 0.5rem;
+          }
+
+          .cta-details {
+            flex-direction: column;
+            gap: 0.5rem;
           }
         }
       `}</style>
