@@ -251,7 +251,30 @@ The frontend uses optimized Three.js rendering:
 - **InstancedMesh** for walls (1 draw call vs 300+)
 - **Merged geometry** for floor tiles
 - **Biome system** for visual variety without extra meshes
+- **Adaptive quality** via `useAdaptiveQuality()` hook
 - Result: **70x fewer draw calls** on maze rendering
+
+### Adaptive Quality (NEW)
+
+```typescript
+import { useAdaptiveQuality } from '@/components/PerformanceMonitor'
+
+function Game() {
+  const { quality, settings, isLowEnd } = useAdaptiveQuality()
+  
+  return (
+    <Maze3DOptimized 
+      data={mazeData} 
+      brightMode={isLowEnd}  // Brighter colors for mobile
+    />
+  )
+}
+```
+
+Quality presets:
+- **high**: 25x25 maze, decorations, post-processing
+- **medium**: 20x20 maze, decorations, no post-processing  
+- **low**: 15x15 maze, no decorations, mobile-optimized
 
 ## Support
 
