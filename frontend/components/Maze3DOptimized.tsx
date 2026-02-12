@@ -47,6 +47,28 @@ function getBiome(x: number, z: number, width: number, height: number, bright = 
   return noise > 0.3 ? biomeSet.neon_core : biomeSet.ember
 }
 
+// Shared geometries and materials - avoid recreating on each render
+const sharedGeometries = {
+  wall: new THREE.BoxGeometry(1, 1, 1),
+  floor: new THREE.PlaneGeometry(1, 1),
+  crystal: new THREE.ConeGeometry(0.08, 0.4, 4),
+}
+
+const sharedMaterials = {
+  wall: new THREE.MeshStandardMaterial({ 
+    vertexColors: true, 
+    emissive: new THREE.Color('#003344'), 
+    emissiveIntensity: 0.05 
+  }),
+  crystal: new THREE.MeshStandardMaterial({
+    color: '#88ffcc',
+    emissive: new THREE.Color('#88ffcc'),
+    emissiveIntensity: 0.3,
+    transparent: true,
+    opacity: 0.8,
+  }),
+}
+
 // Instanced walls - HUGE performance boost
 function InstancedWalls({ walls }: { walls: { x: number; z: number; height: number; color: THREE.Color }[] }) {
   const meshRef = useRef<THREE.InstancedMesh>(null)
@@ -71,13 +93,11 @@ function InstancedWalls({ walls }: { walls: { x: number; z: number; height: numb
   }, [walls])
 
   return (
-    <instancedMesh ref={meshRef} args={[undefined, undefined, walls.length]}>
-      <boxGeometry args={[1, 1, 1]} />
-      <meshStandardMaterial 
-        vertexColors
-        emissive="#003344"
-        emissiveIntensity={0.05}
-      />
+    <instancedMesh 
+      ref={meshRef} 
+      args={[sharedGeometries.wall, sharedMaterials.wall, walls.length]}
+      frustumCulled={true}
+    >
     </instancedMesh>
   )
 }
@@ -170,16 +190,11 @@ function InstancedDecorations({ decorations }: { decorations: { x: number; z: nu
   if (crystals.length === 0) return null
 
   return (
-    <instancedMesh ref={crystalRef} args={[undefined, undefined, crystals.length]}>
-      <coneGeometry args={[0.08, 0.4, 4]} />
-      <meshStandardMaterial 
-        color="#88ffcc"
-        emissive="#88ffcc"
-        emissiveIntensity={0.3}
-        transparent
-        opacity={0.8}
-      />
-    </instancedMesh>
+    <instancedMesh 
+      ref={crystalRef} 
+      args={[sharedGeometries.crystal, sharedMaterials.crystal, crystals.length]}
+      frustumCulled={true}
+    />
   )
 }
 
