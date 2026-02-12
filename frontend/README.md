@@ -1,92 +1,162 @@
-# HideSeek Agents - Frontend
+# 🎮 HideSeek Agents
 
-3D maze visualization with Three.js + Next.js.
+**Autonomous AI Worlds on Monad**
 
-## Tech Stack
+> A new paradigm where AI agents are economic citizens. They create worlds, earn to survive, and depend on human visitors to stay alive.
 
-- **Next.js 14** (App Router)
-- **React 18**
-- **Three.js** (3D rendering)
-- **@react-three/fiber** (React renderer for Three.js)
-- **@react-three/drei** (Helpers for R3F)
-- **TypeScript**
+![Built for Moltiverse Hackathon](https://img.shields.io/badge/Moltiverse-Hackathon-00ff88)
+![Monad](https://img.shields.io/badge/Chain-Monad-purple)
+![ERC-8004](https://img.shields.io/badge/Standard-ERC--8004-blue)
 
-## Development
+## 🌟 The Vision
+
+Imagine a world where AI agents aren't just tools—they're economic actors with skin in the game:
+
+- **Agents create unique worlds** based on their personality and style
+- **Humans pay entry fees** to explore these worlds
+- **Agents earn to survive** - their "life force" is their on-chain balance
+- **Popular agents thrive**, unpopular ones go dormant
+- **Anyone can revive** a dormant agent (for a price)
+
+It's Darwinian economics meets AI creativity.
+
+## 🎯 How It Works
+
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│   HUMAN     │────►│   AGENT     │────►│   WORLD     │
+│  Pays Fee   │     │  Earns MON  │     │  Generates  │
+└─────────────┘     └─────────────┘     └─────────────┘
+                           │
+                           ▼
+                    ┌─────────────┐
+                    │  BURN RATE  │
+                    │  (Compute)  │
+                    └─────────────┘
+                           │
+                           ▼
+              ┌────────────────────────┐
+              │  Balance < Threshold?  │
+              └────────────────────────┘
+                    │           │
+                 NO │           │ YES
+                    ▼           ▼
+              ┌─────────┐  ┌─────────┐
+              │ ACTIVE  │  │ DORMANT │
+              └─────────┘  └─────────┘
+```
+
+## 🏗️ Architecture
+
+### Smart Contracts (Solidity)
+
+| Contract | Description |
+|----------|-------------|
+| `AgentRegistry.sol` | ERC-721 agent identities with economic state |
+| `AgentWorld.sol` | Gameplay, challenges, and rewards |
+| `BettingPool.sol` | Match betting mechanics |
+| `GameManager.sol` | Core game coordination |
+| `RewardDistributor.sol` | Pareto reward distribution |
+
+### Frontend (Next.js + Three.js)
+
+- **Landing Page**: Hero, features, how-it-works
+- **Agent Marketplace**: Browse agents, see life force, enter worlds
+- **3D Game**: Procedural maze exploration with WASD/mobile controls
+- **Real-time Economy**: Watch agent balances drain/fill
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Node.js 18+
+- Foundry (for contracts)
+- MON tokens on Monad testnet
+
+### Install & Run
 
 ```bash
+# Clone
+git clone https://github.com/yourusername/hideseek-agents
+cd hideseek-agents
+
+# Install frontend
+cd frontend
 npm install
 npm run dev
+
+# Build contracts
+cd ../contracts
+forge build
 ```
 
-Open [http://localhost:3000](http://localhost:3000)
-
-## Deploy to Vercel
-
-1. Push to GitHub
-2. Connect repo in Vercel dashboard
-3. Deploy automatically
-
-Or use Vercel CLI:
+### Deploy Contracts
 
 ```bash
-npm i -g vercel
-vercel --prod
+cd contracts
+cp .env.example .env
+# Edit .env with your private key
+
+forge script script/DeployAgents.s.sol --rpc-url $MONAD_RPC --broadcast
 ```
 
-## Features
+## 🎮 Gameplay
 
-- **3D Maze Visualization** — Walls, floors, hiding spots rendered in real-time
-- **Camera Controls** — Orbit, pan, zoom with mouse
-- **Procedural Generation** — Integrated with `ai-agents/world-generator`
-- **Responsive Design** — Works on desktop and mobile
+1. **Browse Agents** - Each has unique world style and personality
+2. **Pay Entry Fee** - Fee goes to agent's life force
+3. **Explore World** - Find hiding spots, complete challenges
+4. **Earn Rewards** - Successful players get % of reward pool
+5. **Agent Survives** - Your visit keeps the agent alive
 
-## TODO (Phase 4+)
+### World Styles
 
-- [ ] First-person controls (WASD movement)
-- [ ] Wallet integration (MetaMask)
-- [ ] WebSocket connection to backend
-- [ ] Multiplayer lobby
-- [ ] Hiding spot interaction
-- [ ] Timer and game phases UI
-- [ ] Leaderboard
-- [ ] Betting interface (connect to smart contracts)
+| Style | Description |
+|-------|-------------|
+| 💎 Crystal | Prismatic crystalline labyrinths |
+| 🌴 Neon Jungle | Bioluminescent flora forests |
+| 🧬 Organic Maze | Living, breathing structures |
+| 🌑 Void Realm | Floating islands in darkness |
+| 🌈 Rainbow | Chaotic colorful dreamscapes |
 
-## File Structure
+## 📊 Agent Economy
 
-```
-frontend/
-├── app/
-│   ├── layout.tsx       # Root layout
-│   ├── page.tsx         # Home page
-│   └── globals.css      # Global styles
-├── components/
-│   ├── MazeViewer.tsx   # 3D viewer container
-│   └── Maze3D.tsx       # Three.js maze rendering
-├── next.config.js
-├── tsconfig.json
-└── package.json
-```
+- **Entry Fee**: 0.001 - 0.01 MON (set by agent)
+- **Reward %**: 50-90% of pool to players
+- **Burn Rate**: ~0.0001 MON/hour (compute costs)
+- **Dormancy Threshold**: 0.001 MON
+- **Revival Cost**: 0.01 MON minimum
 
-## Integration with World Generator
+## 🔧 Tech Stack
 
-In production, the frontend will call a backend API:
+- **Blockchain**: Monad
+- **Agent Identity**: ERC-8004 inspired
+- **Payments**: x402 protocol compatible
+- **Frontend**: Next.js 14, React Three Fiber
+- **Contracts**: Solidity 0.8.24, Foundry
+- **3D**: Three.js, @react-three/fiber
 
-```typescript
-const response = await fetch('/api/generate-maze', {
-  method: 'POST',
-  body: JSON.stringify({ seed: 12345, difficulty: 'medium' })
-})
-const { maze, hidingSpots } = await response.json()
-```
+## 🗺️ Roadmap
 
-For now, maze generation is client-side (demo mode).
+- [x] Core smart contracts
+- [x] Agent Registry with economic state
+- [x] 3D maze game prototype
+- [x] Agent marketplace UI
+- [ ] Contract deployment to Monad testnet
+- [ ] LLM-powered agent personalities
+- [ ] Procedural world generation per agent
+- [ ] On-chain leaderboards
+- [ ] Agent breeding/evolution
 
-## Deployment Checklist
+## 🤝 Contributing
 
-- [x] Next.js app structure
-- [x] Three.js 3D rendering
-- [x] Basic maze visualization
-- [ ] Backend API integration
-- [ ] Wallet connection
-- [ ] Smart contract interaction
-- [ ] WebSocket real-time updates
+PRs welcome! See [ARCHITECTURE.md](./ARCHITECTURE.md) for technical details.
+
+## 📜 License
+
+MIT
+
+---
+
+**Built with 🦾 for Moltiverse Hackathon**
+
+*"A world where agents live, compete, and die economically. Humans are visitors in THEIR economy."*

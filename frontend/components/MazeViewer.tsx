@@ -6,29 +6,112 @@ import { useEffect, useState, useRef } from 'react'
 import Maze3D from './Maze3D'
 import { Vector3 } from 'three'
 
-// Import the maze generator
+// DFS Maze generator for proper labyrinth
 const generateMaze = () => {
-  const size = 21
+  const size = 25 // Odd number for proper maze
   const maze: string[][] = []
   
+  // Initialize all as walls
   for (let y = 0; y < size; y++) {
     maze[y] = []
     for (let x = 0; x < size; x++) {
-      if (x === 0 || x === size - 1 || y === 0 || y === size - 1) {
-        maze[y][x] = 'WALL'
-      } else if ((x + y) % 3 === 0) {
-        maze[y][x] = 'WALL'
-      } else if (x === 10 && y === 10) {
-        maze[y][x] = 'START'
-      } else if ((x === 5 && y === 5) || (x === 15 && y === 15)) {
-        maze[y][x] = 'HIDING_SPOT'
-      } else {
-        maze[y][x] = 'FLOOR'
+      maze[y][x] = 'WALL'
+    }
+  }
+  
+  // DFS carving
+  const stack: [number, number][] = []
+  const startX = 1
+  const startZ = 1
+  maze[startZ][startX] = 'FLOOR'
+  stack.push([startX, startZ])
+  
+  const directions = [
+    [0, -2], [0, 2], [-2, 0], [2, 0]
+  ]
+  
+  const shuffle = <T,>(arr: T[]): T[] => {
+    const result = [...arr]
+    for (let i = result.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1))
+      ;[result[i], result[j]] = [result[j], result[i]]
+    }
+    return result
+  }
+  
+  while (stack.length > 0) {
+    const [cx, cz] = stack[stack.length - 1]
+    const shuffledDirs = shuffle(directions)
+    let carved = false
+    
+    for (const [dx, dz] of shuffledDirs) {
+      const nx = cx + dx
+      const nz = cz + dz
+      
+      if (nx > 0 && nx < size - 1 && nz > 0 && nz < size - 1 && maze[nz][nx] === 'WALL') {
+        // Carve passage
+        maze[cz + dz / 2][cx + dx / 2] = 'FLOOR'
+        maze[nz][nx] = 'FLOOR'
+        stack.push([nx, nz])
+        carved = true
+        break
+      }
+    }
+    
+    if (!carved) {
+      stack.pop()
+    }
+  }
+  
+  // Set start position (center-ish)
+  const centerX = Math.floor(size / 2)
+  const centerZ = Math.floor(size / 2)
+  // Find nearest floor to center
+  let startPosX = centerX
+  let startPosZ = centerZ
+  for (let r = 0; r < 5; r++) {
+    for (let dy = -r; dy <= r; dy++) {
+      for (let dx = -r; dx <= r; dx++) {
+        const tx = centerX + dx
+        const tz = centerZ + dy
+        if (tx > 0 && tx < size && tz > 0 && tz < size && maze[tz][tx] === 'FLOOR') {
+          startPosX = tx
+          startPosZ = tz
+          maze[tz][tx] = 'START'
+          r = 100 // break outer loops
+          break
+        }
       }
     }
   }
   
-  return { maze, width: size, height: size, hidingSpots: [{x: 5, y: 5}, {x: 15, y: 15}] }
+  // Place hiding spots in far corners
+  const hidingSpots: {x: number, y: number}[] = []
+  const corners = [
+    [3, 3], [3, size - 4], [size - 4, 3], [size - 4, size - 4],
+    [size / 2, 3], [size / 2, size - 4]
+  ]
+  
+  for (const [tx, tz] of corners) {
+    // Find nearest floor
+    for (let r = 0; r < 4; r++) {
+      let found = false
+      for (let dy = -r; dy <= r && !found; dy++) {
+        for (let dx = -r; dx <= r && !found; dx++) {
+          const fx = Math.floor(tx + dx)
+          const fz = Math.floor(tz + dy)
+          if (fx > 0 && fx < size && fz > 0 && fz < size && maze[fz][fx] === 'FLOOR') {
+            maze[fz][fx] = 'HIDING_SPOT'
+            hidingSpots.push({ x: fx, y: fz })
+            found = true
+          }
+        }
+      }
+      if (found) break
+    }
+  }
+  
+  return { maze, width: size, height: size, hidingSpots, startPos: { x: startPosX, z: startPosZ } }
 }
 
 // Player component
@@ -55,10 +138,25 @@ function Player({ position, movement, onPositionChange }: any) {
   })
 
   return (
-    <mesh ref={meshRef} position={position} castShadow>
-      <capsuleGeometry args={[0.3, 0.8, 8, 16]} />
-      <meshStandardMaterial color="#00aaff" emissive="#0088ff" emissiveIntensity={0.5} />
-    </mesh>
+    <group>
+      <mesh ref={meshRef} position={position} castShadow>
+        <capsuleGeometry args={[0.3, 0.8, 8, 16]} />
+        <meshStandardMaterial 
+          color="#00ccff" 
+          emissive="#00aaff" 
+          emissiveIntensity={0.8}
+          transparent
+          opacity={0.95}
+        />
+      </mesh>
+      {/* Player glow light */}
+      <pointLight 
+        position={[position[0], position[1] + 0.5, position[2]]} 
+        color="#00ccff" 
+        intensity={0.6} 
+        distance={4} 
+      />
+    </group>
   )
 }
 
@@ -94,6 +192,10 @@ export default function MazeViewer() {
   useEffect(() => {
     const data = generateMaze()
     setMazeData(data)
+    // Set initial player position to maze start
+    if (data.startPos) {
+      setPlayerPos([data.startPos.x - data.width / 2, 1, data.startPos.z - data.height / 2])
+    }
     
     const checkMobile = () => setIsMobile(window.innerWidth < 768)
     checkMobile()
@@ -162,9 +264,21 @@ export default function MazeViewer() {
         <PerspectiveCamera makeDefault position={[10, 8, 18]} fov={60} />
         <CameraRig target={playerPos} />
         
-        <ambientLight intensity={0.6} />
-        <directionalLight position={[10, 15, 5]} intensity={1} castShadow />
-        <pointLight position={[-10, 10, -5]} intensity={0.5} />
+        {/* Atmospheric fog */}
+        <fog attach="fog" args={['#000811', 5, 35]} />
+        <color attach="background" args={['#000811']} />
+        
+        {/* Dim ambient for atmosphere */}
+        <ambientLight intensity={0.15} color="#4488aa" />
+        
+        {/* Main lights with neon colors */}
+        <directionalLight position={[10, 15, 5]} intensity={0.3} color="#ffffff" castShadow />
+        <pointLight position={[-8, 6, -8]} intensity={0.5} color="#00ffcc" distance={20} />
+        <pointLight position={[8, 6, 8]} intensity={0.5} color="#ff00ff" distance={20} />
+        <pointLight position={[0, 4, 0]} intensity={0.3} color="#00ff88" distance={15} />
+        
+        {/* Subtle hemisphere light for color bleed */}
+        <hemisphereLight args={['#1a0033', '#001a1a', 0.3]} />
         
         <Maze3D data={mazeData} />
         <Player 
@@ -173,9 +287,10 @@ export default function MazeViewer() {
           onPositionChange={setPlayerPos}
         />
         
+        {/* Dark ground plane */}
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.5, 0]} receiveShadow>
           <planeGeometry args={[100, 100]} />
-          <meshStandardMaterial color="#0a0a0a" />
+          <meshStandardMaterial color="#020205" />
         </mesh>
       </Canvas>
 

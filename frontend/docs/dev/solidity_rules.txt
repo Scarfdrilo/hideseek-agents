@@ -1,0 +1,104 @@
+# Solidity Stack Rules for HideSeek Agents
+
+## Version
+- Solidity: 0.8.20
+- Foundry: Latest stable
+- OpenZeppelin: v5.5.0
+
+## Contract Structure
+
+### Imports
+- Always use OpenZeppelin v5 paths: `@openzeppelin/contracts/utils/...`
+- NOT `@openzeppelin/contracts/security/...` (deprecated in v5)
+
+### State Management
+- Use mappings for gas efficiency over arrays when possible
+- Mark state-changing functions as `external` if only called externally
+- Use `memory` for function params, `storage` for state refs
+
+### Gas Optimization
+- Batch operations when possible (e.g., multiple discoveries in one tx)
+- Use `unchecked` blocks for arithmetic that cannot overflow
+- Pack struct variables to save storage slots
+
+### Security
+- ALWAYS use ReentrancyGuard for fund transfers
+- Validate all external inputs
+- Use SafeERC20 for token interactions
+- Never use `transfer()` for ETH (use `call` with gas limits)
+
+## Common Patterns
+
+### Commitment Scheme (Hide Positions)
+```solidity
+// Store commitment
+bytes32 commitment = keccak256(abi.encodePacked(x, y, z, salt));
+hideCommitments[msg.sender] = commitment;
+
+// Verify on reveal
+bytes32 computed = keccak256(abi.encodePacked(x, y, z, salt));
+require(hideCommitments[hider] == computed, "Invalid position");
+```
+
+### Pareto Distribution
+```solidity
+// Reward proportional to discovery time
+uint256 reward = (totalPool * discoveryTime[i]) / totalWeightedTime;
+```
+
+### Phase State Machine
+```solidity
+enum GamePhase { Waiting, Hiding, Seeking, Finished }
+
+modifier onlyPhase(GamePhase expected) {
+    require(phase == expected, "Wrong phase");
+    _;
+}
+```
+
+## DO NOT
+
+- ❌ Use `address.transfer()` (2300 gas stipend can break)
+- ❌ Assume `block.timestamp` is precise (15s drift is common)
+- ❌ Store large arrays on-chain (emit events instead)
+- ❌ Use `tx.origin` for auth (use `msg.sender`)
+- ❌ Deploy without testing on testnet first
+
+## Testing with Foundry
+
+### Basic Test Structure
+```solidity
+contract GameManagerTest is Test {
+    GameManager gameManager;
+    
+    function setUp() public {
+        gameManager = new GameManager(...);
+    }
+    
+    function testCreateMatch() public {
+        uint256 matchId = gameManager.createMatch(...);
+        assertEq(matchId, 1);
+    }
+}
+```
+
+### Gas Profiling
+```bash
+forge test --gas-report
+```
+
+### Fuzzing
+```solidity
+function testFuzz_RewardDistribution(uint256 time1, uint256 time2) public {
+    // Foundry auto-fuzzes inputs
+}
+```
+
+## Deployment Checklist
+
+- [ ] All tests pass: `forge test`
+- [ ] Compilation clean: `forge build`
+- [ ] Contract verified on block explorer
+- [ ] Constructor args correct (token address, wallet addresses)
+- [ ] Initial state valid (check via RPC calls)
+- [ ] Emergency pause mechanism tested
