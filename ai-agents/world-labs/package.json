@@ -1,0 +1,18 @@
+{
+  "name": "hideseek-world-labs",
+  "version": "1.0.0",
+  "description": "World Labs API integration for HideSeek Agents",
+  "main": "client.js",
+  "scripts": {
+    "generate": "node client.js",
+    "test": "node test-client.js"
+  },
+  "keywords": [
+    "world-labs",
+    "marble",
+    "3d",
+    "gaussian-splatting",
+    "hideseek"
+  ],
+  "license": "MIT"
+}

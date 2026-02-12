@@ -1,0 +1,58 @@
+{
+  "mazePrompts": [
+    {
+      "id": "dungeon_basic",
+      "name": "Classic Dungeon",
+      "prompt": "dark medieval dungeon maze with stone walls, flickering torches on brackets, dusty floor with cobwebs in corners, mysterious fog rolling through corridors, ominous atmosphere",
+      "tags": ["fantasy", "dark", "medieval"]
+    },
+    {
+      "id": "scifi_station",
+      "name": "Space Station",
+      "prompt": "futuristic space station corridor maze with metallic walls, blue LED strip lighting, glass panels showing stars, steam vents, sci-fi technology panels on walls",
+      "tags": ["scifi", "futuristic", "space"]
+    },
+    {
+      "id": "abandoned_warehouse",
+      "name": "Abandoned Warehouse",
+      "prompt": "abandoned industrial warehouse maze with rusty metal shelving, broken crates scattered around, dust particles in light beams from broken skylights, graffiti on walls",
+      "tags": ["urban", "industrial", "abandoned"]
+    },
+    {
+      "id": "ancient_temple",
+      "name": "Ancient Temple",
+      "prompt": "ancient Mayan temple maze with carved stone walls covered in hieroglyphics, golden torches, jade decorations, mysterious green glow from cracks, jungle vines creeping in",
+      "tags": ["ancient", "temple", "mysterious"]
+    },
+    {
+      "id": "neon_arcade",
+      "name": "Neon Arcade",
+      "prompt": "retro 80s arcade maze with neon pink and cyan lights, arcade cabinets along walls, pixel art decorations, checkerboard floor, synthwave aesthetic",
+      "tags": ["retro", "neon", "80s"]
+    },
+    {
+      "id": "haunted_mansion",
+      "name": "Haunted Mansion",
+      "prompt": "Victorian haunted mansion maze with ornate wallpaper peeling off walls, dusty chandeliers, creaky wooden floors, cobweb-covered paintings, ghostly mist",
+      "tags": ["horror", "victorian", "haunted"]
+    },
+    {
+      "id": "crystal_cave",
+      "name": "Crystal Cave",
+      "prompt": "underground crystal cave maze with giant glowing crystals in purple, blue and pink, bioluminescent mushrooms, reflective crystal surfaces, magical atmosphere",
+      "tags": ["fantasy", "magical", "underground"]
+    },
+    {
+      "id": "underwater_base",
+      "name": "Underwater Base",
+      "prompt": "underwater research facility maze with thick glass walls showing ocean, blue ambient lighting, bubbles rising, kelp visible outside, high-tech equipment",
+      "tags": ["scifi", "underwater", "ocean"]
+    }
+  ],
+  "cameraPositions": {
+    "default": [0, 2, 5],
+    "overhead": [0, 10, 0],
+    "firstPerson": [0, 1.6, 0],
+    "cinematic": [5, 3, 5]
+  }
+}

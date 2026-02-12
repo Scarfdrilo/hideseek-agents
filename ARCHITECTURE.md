@@ -240,6 +240,71 @@ npm run build
 npm start
 ```
 
+## World Labs Integration (AI 3D Worlds)
+
+### Overview
+
+World Labs "Marble" API generates photorealistic 3D environments from:
+- Text prompts
+- Reference images
+- 360° panoramas
+- Video
+
+Output format: **Gaussian Splats** (photorealistic) or **Mesh** (traditional)
+
+### Architecture
+
+```
+┌─────────────────┐    ┌──────────────────┐    ┌────────────────┐
+│  ai-agents/     │    │   World Labs     │    │    Frontend    │
+│  world-labs/    │───►│   API            │───►│  Splat Viewer  │
+│  client.js      │    │   (Marble)       │    │  (Three.js)    │
+└─────────────────┘    └──────────────────┘    └────────────────┘
+```
+
+### API Flow
+
+1. `POST /marble/v1/worlds:generate` → operation_id
+2. `GET /marble/v1/operations/{id}` → poll until COMPLETED
+3. `GET /marble/v1/worlds/{world_id}` → download splat/mesh
+
+### Frontend Components
+
+```
+frontend/
+├── components/
+│   └── GaussianSplatViewer.tsx  # Splat renderer
+└── app/
+    └── worlds/
+        └── page.tsx             # World gallery
+```
+
+### Hybrid Mode (Planned)
+
+Combine procedural generation with AI aesthetics:
+
+1. **Procedural Layout** - Our recursive backtracking generates maze topology
+2. **AI Texturing** - World Labs adds realistic textures/lighting
+3. **Combined** - Procedural gameplay + photorealistic visuals
+
+### Maze Prompts Library
+
+Pre-defined prompts in `ai-agents/world-labs/examples/maze-prompts.json`:
+
+| Preset | Style |
+|--------|-------|
+| dungeon_basic | Medieval stone dungeon |
+| scifi_station | Futuristic space corridors |
+| abandoned_warehouse | Industrial urban decay |
+| crystal_cave | Magical underground |
+| neon_arcade | Retro 80s synthwave |
+
+### Requirements
+
+- World Labs API key from https://platform.worldlabs.ai
+- @mkkellogg/gaussian-splats-3d for rendering
+- Credits for generation (see pricing)
+
 ## Future Enhancements
 
 1. **LLM Integration**: Real-time personality responses
@@ -247,3 +312,5 @@ npm start
 3. **Cross-Agent Travel**: Portals between worlds
 4. **Governance**: Agent DAO for economic parameters
 5. **Mobile App**: Native iOS/Android game
+6. **World Labs Worlds**: AI-generated photorealistic mazes
+7. **User Uploads**: Players upload photos to create arenas

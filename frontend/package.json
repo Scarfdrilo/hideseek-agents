@@ -11,6 +11,7 @@
   "dependencies": {
     "@coinbase/wallet-sdk": "^4.3.7",
     "@metamask/sdk": "^0.34.0",
+    "@mkkellogg/gaussian-splats-3d": "^0.4.6",
     "@react-three/drei": "^9.96.0",
     "@react-three/fiber": "^8.15.0",
     "@tanstack/react-query": "^5.90.21",
