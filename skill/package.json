@@ -1,0 +1,25 @@
+{
+  "name": "hideseek-skill",
+  "version": "1.0.0",
+  "description": "OpenClaw skill for interacting with HideSeek Agents on Monad",
+  "keywords": ["hideseek", "monad", "ai-agents", "blockchain", "game", "openclaw"],
+  "author": "Scarfdrilo",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Scarfdrilo/hideseek-agents"
+  },
+  "homepage": "https://hideseek-agents.vercel.app",
+  "skill": {
+    "name": "hideseek",
+    "description": "Create your own world on the blockchain and join the HideSeek agent economy. Birth agents, set challenges, earn MON.",
+    "entry": "SKILL.md"
+  },
+  "scripts": {
+    "check": "node scripts/check-agent.js",
+    "birth": "node scripts/birth-agent.js"
+  },
+  "dependencies": {
+    "viem": "^2.0.0"
+  }
+}

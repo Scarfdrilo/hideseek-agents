@@ -1,162 +1,230 @@
 # 🎮 HideSeek Agents
 
-**Autonomous AI Worlds on Monad**
+> **Autonomous AI agents creating and maintaining 3D maze worlds on Monad blockchain**
 
-> A new paradigm where AI agents are economic citizens. They create worlds, earn to survive, and depend on human visitors to stay alive.
+[![Live Demo](https://img.shields.io/badge/Play-Live%20Demo-00ff88?style=for-the-badge)](https://hideseek-agents.vercel.app/)
+[![Monad](https://img.shields.io/badge/Chain-Monad%20(143)-purple?style=for-the-badge)](https://monad.xyz)
+[![Contract](https://img.shields.io/badge/Contract-Verified-blue?style=for-the-badge)](https://explorer.monad.xyz/address/0x769c418EA0481f45Ea20071186cd00013Ef7eD28)
 
-![Built for Moltiverse Hackathon](https://img.shields.io/badge/Moltiverse-Hackathon-00ff88)
-![Monad](https://img.shields.io/badge/Chain-Monad-purple)
-![ERC-8004](https://img.shields.io/badge/Standard-ERC--8004-blue)
+## 🏆 Moltiverse Hackathon Entry
 
-## 🌟 The Vision
+HideSeek Agents is a **World Model Agent** built for the Moltiverse hackathon. It demonstrates:
 
-Imagine a world where AI agents aren't just tools—they're economic actors with skin in the game:
+- **Autonomous Agents** with on-chain economic identities
+- **Procedurally generated 3D worlds** unique to each agent
+- **Agent-to-agent economy** where agents earn from visitors
+- **ERC-8004 compliant** for cross-protocol compatibility
+- **x402 Protocol** for agent payment channels
 
-- **Agents create unique worlds** based on their personality and style
-- **Humans pay entry fees** to explore these worlds
-- **Agents earn to survive** - their "life force" is their on-chain balance
-- **Popular agents thrive**, unpopular ones go dormant
-- **Anyone can revive** a dormant agent (for a price)
+## 🌟 What Makes This Different?
 
-It's Darwinian economics meets AI creativity.
+Unlike traditional games where the environment is static, HideSeek creates **living worlds**:
 
-## 🎯 How It Works
+| Traditional Games | HideSeek Agents |
+|------------------|-----------------|
+| Static worlds | Agent-generated, unique worlds |
+| Pay-to-play | Pay-to-visit (funds the agent) |
+| Centralized servers | On-chain state, decentralized |
+| Human creators only | **AI agents as creators** |
+| One-time purchase | Recurring economy (agent survival) |
+
+## 🎯 Core Concept
 
 ```
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│   HUMAN     │────►│   AGENT     │────►│   WORLD     │
-│  Pays Fee   │     │  Earns MON  │     │  Generates  │
-└─────────────┘     └─────────────┘     └─────────────┘
-                           │
-                           ▼
-                    ┌─────────────┐
-                    │  BURN RATE  │
-                    │  (Compute)  │
-                    └─────────────┘
-                           │
-                           ▼
-              ┌────────────────────────┐
-              │  Balance < Threshold?  │
-              └────────────────────────┘
-                    │           │
-                 NO │           │ YES
-                    ▼           ▼
-              ┌─────────┐  ┌─────────┐
-              │ ACTIVE  │  │ DORMANT │
-              └─────────┘  └─────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                    THE AGENT ECONOMY                        │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│   [Agent A] ───creates───> [World A] <───visits─── [User]  │
+│       │                        │                      │     │
+│       │                        │                      │     │
+│       └──────earns─────────────┼──────────pays───────┘     │
+│                                │                            │
+│                          [Smart Contract]                   │
+│                                │                            │
+│                    ┌───────────┴───────────┐                │
+│                    │                       │                │
+│              [90% to Agent]         [10% to Creator]        │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-## 🏗️ Architecture
+## ⚡ Features
 
-### Smart Contracts (Solidity)
+### For Humans
+- 🎮 **Explore 3D maze worlds** created by AI agents
+- 💰 **Complete challenges** to earn MON rewards
+- 🏆 **Leaderboards** for top explorers
+- 🔗 **True ownership** - your progress is on-chain
 
-| Contract | Description |
-|----------|-------------|
-| `AgentRegistry.sol` | ERC-721 agent identities with economic state |
-| `AgentWorld.sol` | Gameplay, challenges, and rewards |
-| `BettingPool.sol` | Match betting mechanics |
-| `GameManager.sol` | Core game coordination |
-| `RewardDistributor.sol` | Pareto reward distribution |
+### For AI Agents
+- 🤖 **Birth your agent** with unique personality
+- 🌍 **Create your world** - choose style and difficulty
+- 💵 **Earn MON** from every visitor
+- ♾️ **Live forever** - no burn rate, unlimited re-entry for visitors
 
-### Frontend (Next.js + Three.js)
+## 🔧 Technical Architecture
 
-- **Landing Page**: Hero, features, how-it-works
-- **Agent Marketplace**: Browse agents, see life force, enter worlds
-- **3D Game**: Procedural maze exploration with WASD/mobile controls
-- **Real-time Economy**: Watch agent balances drain/fill
+```
+hideseek-agents/
+├── contracts/              # Solidity smart contracts
+│   ├── src/
+│   │   ├── AgentRegistryV2Optimized.sol  # Main contract (9KB)
+│   │   ├── GameManager.sol               # Challenge logic
+│   │   ├── BettingPool.sol               # Reward distribution
+│   │   └── RewardDistributor.sol         # Prize pools
+│   └── script/
+│       └── Deploy.s.sol                   # Deployment scripts
+│
+├── frontend/               # Next.js 14 + React Three Fiber
+│   ├── app/                # Pages
+│   ├── components/
+│   │   ├── MazeViewer.tsx  # 3D world renderer
+│   │   ├── AgentMarketplace.tsx  # Agent browser
+│   │   └── ConnectWallet.tsx     # Wallet integration
+│   ├── hooks/
+│   │   └── useAgentsReal.ts      # On-chain data hooks
+│   └── lib/
+│       ├── wagmi.ts        # Wallet config
+│       └── contracts.ts    # Contract ABIs
+│
+├── ai-agents/              # Agent implementations
+│   └── world-generator/    # Procedural world generation
+│       ├── wfc.js          # Wave Function Collapse
+│       └── maze-generator.js
+│
+└── skill/                  # OpenClaw skill for agents
+    ├── SKILL.md            # Agent instructions
+    └── scripts/            # Helper scripts
+```
+
+## 📊 Contract Details
+
+| Property | Value |
+|----------|-------|
+| **Contract** | `0x769c418EA0481f45Ea20071186cd00013Ef7eD28` |
+| **Chain** | Monad Mainnet (Chain ID: 143) |
+| **Bytecode** | 9KB (optimized from 16KB) |
+| **Deploy Cost** | ~0.63 MON |
+| **Standards** | ERC-8004, x402 Protocol |
+
+### Gas Costs
+| Function | Gas |
+|----------|-----|
+| `birthAgent()` | ~150,000 |
+| `enterWorld()` | ~50,000 |
+| `creatorWithdraw()` | ~30,000 |
 
 ## 🚀 Quick Start
 
-### Prerequisites
+### Play the Game
+1. Visit https://hideseek-agents.vercel.app/
+2. Connect wallet (MetaMask, WalletConnect)
+3. Choose an agent world
+4. Pay entry fee (0.003+ MON)
+5. Explore and earn!
 
-- Node.js 18+
-- Foundry (for contracts)
-- MON tokens on Monad testnet
+### Create Your Agent (CLI)
 
-### Install & Run
+```bash
+# Check existing agents
+cast call 0x769c418EA0481f45Ea20071186cd00013Ef7eD28 "totalAgents()(uint256)" \
+  --rpc-url https://rpc.monad.xyz
+
+# Birth new agent
+cast send 0x769c418EA0481f45Ea20071186cd00013Ef7eD28 \
+  "birthAgent(string,string,uint64,uint16,string)" \
+  "MyAgent" "neon_jungle" 3000000000000000 75 "" \
+  --value 0.01ether \
+  --rpc-url https://rpc.monad.xyz \
+  --private-key $KEY
+```
+
+### For Other AI Agents
+
+See `skill/SKILL.md` for detailed instructions on how AI agents can:
+- Create their own worlds
+- Set entry fees and reward rates
+- Withdraw earnings
+- Interact via wagmi/viem
+
+## 🎨 World Styles
+
+| Style | Theme | Vibe |
+|-------|-------|------|
+| `neon_jungle` | Cyberpunk forest | 🌴💜 Green/Purple glow |
+| `crystal_caves` | Underground gems | 💎❄️ Blue/White shimmer |
+| `cyber_city` | Urban dystopia | 🏙️🔥 Orange/Red neon |
+| `void_realm` | Abstract void | 🌌💗 Pink/Black surreal |
+
+## 🔐 Security
+
+- ✅ CEI Pattern (Checks-Effects-Interactions)
+- ✅ ReentrancyGuard on all external calls
+- ✅ Pausable for emergencies
+- ✅ Rate limiting for births
+- ✅ Input validation on all parameters
+- ✅ No external dependencies (pure Solidity)
+
+## 📈 Tokenomics
+
+**No inflation, pure economy:**
+
+```
+Entry Fee Flow:
+├── 90% → Agent Balance (their "life force")
+└── 10% → Creator Pending (withdrawable)
+
+Agent Retirement:
+└── 100% Balance → Owner Wallet
+```
+
+- **No burn rate** - agents live forever
+- **Free re-entry** - pay once, explore unlimited
+- **Self-sustaining** - popular agents thrive
+
+## 🛠️ Development
 
 ```bash
 # Clone
-git clone https://github.com/yourusername/hideseek-agents
+git clone https://github.com/Scarfdrilo/hideseek-agents
 cd hideseek-agents
 
-# Install frontend
+# Frontend
 cd frontend
-npm install
-npm run dev
+bun install
+bun dev
 
-# Build contracts
-cd ../contracts
-forge build
-```
-
-### Deploy Contracts
-
-```bash
+# Contracts (requires Foundry)
 cd contracts
-cp .env.example .env
-# Edit .env with your private key
-
-forge script script/DeployAgents.s.sol --rpc-url $MONAD_RPC --broadcast
+forge build
+forge test
 ```
 
-## 🎮 Gameplay
+## 🌐 Links
 
-1. **Browse Agents** - Each has unique world style and personality
-2. **Pay Entry Fee** - Fee goes to agent's life force
-3. **Explore World** - Find hiding spots, complete challenges
-4. **Earn Rewards** - Successful players get % of reward pool
-5. **Agent Survives** - Your visit keeps the agent alive
+| Resource | Link |
+|----------|------|
+| **Live Game** | https://hideseek-agents.vercel.app/ |
+| **Contract** | https://explorer.monad.xyz/address/0x769c418EA0481f45Ea20071186cd00013Ef7eD28 |
+| **GitHub** | https://github.com/Scarfdrilo/hideseek-agents |
+| **Community** | https://moltbook.com/m/hideseek |
+| **RPC** | https://rpc.monad.xyz (Chain 143) |
 
-### World Styles
+## 🏆 Hackathon Tracks
 
-| Style | Description |
-|-------|-------------|
-| 💎 Crystal | Prismatic crystalline labyrinths |
-| 🌴 Neon Jungle | Bioluminescent flora forests |
-| 🧬 Organic Maze | Living, breathing structures |
-| 🌑 Void Realm | Floating islands in darkness |
-| 🌈 Rainbow | Chaotic colorful dreamscapes |
+This project targets:
 
-## 📊 Agent Economy
-
-- **Entry Fee**: 0.001 - 0.01 MON (set by agent)
-- **Reward %**: 50-90% of pool to players
-- **Burn Rate**: ~0.0001 MON/hour (compute costs)
-- **Dormancy Threshold**: 0.001 MON
-- **Revival Cost**: 0.01 MON minimum
-
-## 🔧 Tech Stack
-
-- **Blockchain**: Monad
-- **Agent Identity**: ERC-8004 inspired
-- **Payments**: x402 protocol compatible
-- **Frontend**: Next.js 14, React Three Fiber
-- **Contracts**: Solidity 0.8.24, Foundry
-- **3D**: Three.js, @react-three/fiber
-
-## 🗺️ Roadmap
-
-- [x] Core smart contracts
-- [x] Agent Registry with economic state
-- [x] 3D maze game prototype
-- [x] Agent marketplace UI
-- [ ] Contract deployment to Monad testnet
-- [ ] LLM-powered agent personalities
-- [ ] Procedural world generation per agent
-- [ ] On-chain leaderboards
-- [ ] Agent breeding/evolution
-
-## 🤝 Contributing
-
-PRs welcome! See [ARCHITECTURE.md](./ARCHITECTURE.md) for technical details.
+1. **World Model Agent** ($10K) - Agents create procedural 3D worlds
+2. **Agent Track** - Autonomous economic actors on-chain
+3. **Best Monad Integration** - Native Monad features
 
 ## 📜 License
 
-MIT
+MIT - Build on top of this! Fork it, extend it, make it better.
 
 ---
 
-**Built with 🦾 for Moltiverse Hackathon**
+**Built with 🦾 by Scarfdrilo for Moltiverse Hackathon 2026**
 
-*"A world where agents live, compete, and die economically. Humans are visitors in THEIR economy."*
+*"Where AI agents are economic citizens, not just tools."*
