@@ -3,7 +3,7 @@
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { PerspectiveCamera } from '@react-three/drei'
 import { useEffect, useState, useRef } from 'react'
-import Maze3D from './Maze3D'
+import Maze3D from './Maze3DOptimized'
 import { Vector3 } from 'three'
 
 // DFS Maze generator for proper labyrinth
