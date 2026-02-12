@@ -22,12 +22,12 @@ const BIOMES = {
   ember: { wall: new THREE.Color('#110800'), glow: new THREE.Color('#ff6600'), floor: '#0a0500' },
 }
 
-// Brighter biomes for mobile
+// MUCH brighter biomes for mobile - walls need to be visible!
 const BIOMES_BRIGHT = {
-  neon_core: { wall: new THREE.Color('#002244'), glow: new THREE.Color('#00ffcc'), floor: '#151520' },
-  crystal: { wall: new THREE.Color('#221044'), glow: new THREE.Color('#cc88ff'), floor: '#151518' },
-  toxic: { wall: new THREE.Color('#1a2200'), glow: new THREE.Color('#88ff00'), floor: '#101508' },
-  ember: { wall: new THREE.Color('#221800'), glow: new THREE.Color('#ff6600'), floor: '#151008' },
+  neon_core: { wall: new THREE.Color('#004466'), glow: new THREE.Color('#00ffcc'), floor: '#1a2030' },
+  crystal: { wall: new THREE.Color('#442266'), glow: new THREE.Color('#cc88ff'), floor: '#1a1a25' },
+  toxic: { wall: new THREE.Color('#334400'), glow: new THREE.Color('#88ff00'), floor: '#181a15' },
+  ember: { wall: new THREE.Color('#443300'), glow: new THREE.Color('#ff6600'), floor: '#1a1810' },
 }
 
 function getBiome(x: number, z: number, width: number, height: number, bright = false) {
@@ -60,6 +60,11 @@ const sharedMaterials = {
     emissive: new THREE.Color('#003344'), 
     emissiveIntensity: 0.05 
   }),
+  wallBright: new THREE.MeshStandardMaterial({ 
+    vertexColors: true, 
+    emissive: new THREE.Color('#226688'), 
+    emissiveIntensity: 0.35
+  }),
   crystal: new THREE.MeshStandardMaterial({
     color: '#88ffcc',
     emissive: new THREE.Color('#88ffcc'),
@@ -70,7 +75,7 @@ const sharedMaterials = {
 }
 
 // Instanced walls - HUGE performance boost
-function InstancedWalls({ walls }: { walls: { x: number; z: number; height: number; color: THREE.Color }[] }) {
+function InstancedWalls({ walls, brightMode = false }: { walls: { x: number; z: number; height: number; color: THREE.Color }[], brightMode?: boolean }) {
   const meshRef = useRef<THREE.InstancedMesh>(null)
   
   useEffect(() => {
@@ -92,10 +97,12 @@ function InstancedWalls({ walls }: { walls: { x: number; z: number; height: numb
     }
   }, [walls])
 
+  const material = brightMode ? sharedMaterials.wallBright : sharedMaterials.wall
+  
   return (
     <instancedMesh 
       ref={meshRef} 
-      args={[sharedGeometries.wall, sharedMaterials.wall, walls.length]}
+      args={[sharedGeometries.wall, material, walls.length]}
       frustumCulled={true}
     >
     </instancedMesh>
@@ -238,10 +245,10 @@ export default function Maze3DOptimized({ data, brightMode = false }: MazeProps)
   return (
     <group>
       {/* Instanced walls - 1 draw call for ALL walls */}
-      <InstancedWalls walls={processedData.walls} />
+      <InstancedWalls walls={processedData.walls} brightMode={brightMode} />
       
       {/* Merged floor - 1 draw call */}
-      <MergedFloor tiles={processedData.floors} color={brightMode ? '#151520' : '#0a0a0a'} />
+      <MergedFloor tiles={processedData.floors} color={brightMode ? '#202535' : '#0a0a0a'} />
       
       {/* Instanced decorations - 1 draw call per type */}
       <InstancedDecorations decorations={processedData.decorations} />
