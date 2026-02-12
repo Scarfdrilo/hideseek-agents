@@ -1,8 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-
-import { Agent } from '@/lib/contracts'
+import { type Agent } from '@/hooks/useAgentsReal'
 
 const WORLD_STYLES: Record<string, { gradient: string; emoji: string; description: string }> = {
   crystal: {
@@ -36,12 +35,14 @@ export default function AgentCard({
   agent, 
   onEnterWorld, 
   onFund, 
-  onRevive 
+  onRevive,
+  isPending = false
 }: { 
   agent: Agent
   onEnterWorld: (agent: Agent) => void
   onFund: (agent: Agent, amount: number) => void
   onRevive: (agent: Agent) => void
+  isPending?: boolean
 }) {
   const [lifePercent, setLifePercent] = useState(100)
   const [isHovered, setIsHovered] = useState(false)

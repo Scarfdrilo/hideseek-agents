@@ -1,56 +1,71 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { useAccount } from 'wagmi'
 import AgentCard from './AgentCard'
-import { useAgents } from '@/hooks/useAgents'
-import { Agent } from '@/lib/contracts'
+import { ConnectWallet } from './ConnectWallet'
+import { useAllAgents, useEnterWorld, useFundAgent, useBirthAgent, type Agent } from '@/hooks/useAgentsReal'
 
 interface Props {
   onEnterWorld: (agent: Agent) => void
 }
 
 export default function AgentMarketplace({ onEnterWorld }: Props) {
-  const { agents, loading, error, isDemo, fundAgent, reviveAgent, enterWorld } = useAgents()
+  const { isConnected } = useAccount()
+  const { agents, isLoading, count, refetch } = useAllAgents()
+  const { enterWorld, isPending: enterPending, isConfirming: enterConfirming, isSuccess: enterSuccess } = useEnterWorld()
+  const { fundAgent, isPending: fundPending, isConfirming: fundConfirming } = useFundAgent()
+  const { birthAgent, isPending: birthPending, isConfirming: birthConfirming, isSuccess: birthSuccess } = useBirthAgent()
+  
   const [filter, setFilter] = useState<'all' | 'active' | 'dormant'>('all')
   const [sortBy, setSortBy] = useState<'visitors' | 'earnings' | 'balance'>('visitors')
   const [notification, setNotification] = useState<string | null>(null)
-  
-  // Watch for dormancy events
-  useEffect(() => {
-    const dormantAgents = agents.filter(a => a.state === 'Dormant')
-    // Could show notifications here
-  }, [agents])
+  const [showBirthModal, setShowBirthModal] = useState(false)
+  const [pendingAgent, setPendingAgent] = useState<Agent | null>(null)
+
+  const showNotification = (msg: string) => {
+    setNotification(msg)
+    setTimeout(() => setNotification(null), 4000)
+  }
 
   const handleFund = async (agent: Agent, amount: number) => {
+    if (!isConnected) {
+      showNotification('🔗 Connect wallet first!')
+      return
+    }
     try {
       await fundAgent(agent.id, amount)
-      if (agent.state === 'Dormant') {
-        setNotification(`✨ ${agent.name} has been revived!`)
-        setTimeout(() => setNotification(null), 3000)
-      } else {
-        setNotification(`💰 Funded ${agent.name} with ${amount} MON`)
-        setTimeout(() => setNotification(null), 3000)
-      }
-    } catch (err) {
-      setNotification(`❌ Failed to fund agent`)
-      setTimeout(() => setNotification(null), 3000)
+      showNotification(`💰 Funding ${agent.name} with ${amount} MON...`)
+    } catch (err: any) {
+      showNotification(`❌ ${err.message || 'Failed to fund'}`)
     }
   }
 
   const handleRevive = async (agent: Agent) => {
-    try {
-      await reviveAgent(agent.id)
-      setNotification(`✨ ${agent.name} has been revived!`)
-      setTimeout(() => setNotification(null), 3000)
-    } catch (err) {
-      setNotification(`❌ Failed to revive agent`)
-      setTimeout(() => setNotification(null), 3000)
-    }
+    return handleFund(agent, 0.01)
   }
 
   const handleEnterWorld = async (agent: Agent) => {
-    await enterWorld(agent.id)
-    onEnterWorld(agent)
+    if (!isConnected) {
+      showNotification('🔗 Connect wallet to enter worlds!')
+      return
+    }
+    
+    setPendingAgent(agent)
+    showNotification(`🎮 Entering ${agent.name}'s world... (${agent.entryFee} MON)`)
+    
+    try {
+      await enterWorld(agent.id, agent.entryFee)
+      // Will navigate after tx confirms
+    } catch (err: any) {
+      showNotification(`❌ ${err.message || 'Failed to enter'}`)
+      setPendingAgent(null)
+    }
+  }
+
+  // Navigate when enter tx succeeds
+  if (enterSuccess && pendingAgent) {
+    onEnterWorld(pendingAgent)
   }
 
   const filteredAgents = agents
@@ -65,11 +80,11 @@ export default function AgentMarketplace({ onEnterWorld }: Props) {
   const totalDormant = agents.filter(a => a.state === 'Dormant').length
   const totalEconomy = agents.reduce((sum, a) => sum + a.balance, 0)
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="loading-container">
         <div className="loader"></div>
-        <p>Loading agents from chain...</p>
+        <p>Loading agents from Monad...</p>
         <style jsx>{`
           .loading-container {
             min-height: 100vh;
@@ -104,26 +119,34 @@ export default function AgentMarketplace({ onEnterWorld }: Props) {
         <div className="title-section">
           <h1>🌐 Agent Worlds</h1>
           <p>Explore autonomous worlds, earn rewards, keep agents alive</p>
-          {isDemo && (
-            <span className="demo-badge">🎮 Demo Mode - Contract Not Deployed</span>
-          )}
+          <div className="chain-badge">
+            <span className="chain-dot"></span>
+            Monad Mainnet • {count} Agent{count !== 1 ? 's' : ''}
+          </div>
         </div>
         
-        {/* Global Stats */}
-        <div className="global-stats">
-          <div className="global-stat">
-            <span className="stat-value active">{totalActiveAgents}</span>
-            <span className="stat-label">Active Agents</span>
-          </div>
-          <div className="global-stat">
-            <span className="stat-value dormant">{totalDormant}</span>
-            <span className="stat-label">Dormant</span>
-          </div>
-          <div className="global-stat">
-            <span className="stat-value">{totalEconomy.toFixed(3)}</span>
-            <span className="stat-label">Total MON</span>
-          </div>
+        <div className="header-right">
+          <ConnectWallet />
         </div>
+      </div>
+
+      {/* Global Stats */}
+      <div className="stats-bar">
+        <div className="global-stat">
+          <span className="stat-value active">{totalActiveAgents}</span>
+          <span className="stat-label">Active Agents</span>
+        </div>
+        <div className="global-stat">
+          <span className="stat-value dormant">{totalDormant}</span>
+          <span className="stat-label">Dormant</span>
+        </div>
+        <div className="global-stat">
+          <span className="stat-value">{totalEconomy.toFixed(4)}</span>
+          <span className="stat-label">Total MON</span>
+        </div>
+        <button className="btn-refresh" onClick={() => refetch()}>
+          🔄 Refresh
+        </button>
       </div>
 
       {/* ERC-8004 Badge */}
@@ -168,15 +191,22 @@ export default function AgentMarketplace({ onEnterWorld }: Props) {
 
       {/* Agent Grid */}
       <div className="agent-grid">
-        {filteredAgents.map(agent => (
-          <AgentCard
-            key={agent.id}
-            agent={agent}
-            onEnterWorld={handleEnterWorld}
-            onFund={handleFund}
-            onRevive={handleRevive}
-          />
-        ))}
+        {filteredAgents.length === 0 ? (
+          <div className="no-agents">
+            <p>No agents found. Birth the first one!</p>
+          </div>
+        ) : (
+          filteredAgents.map(agent => (
+            <AgentCard
+              key={agent.id}
+              agent={agent}
+              onEnterWorld={handleEnterWorld}
+              onFund={handleFund}
+              onRevive={handleRevive}
+              isPending={enterPending || enterConfirming}
+            />
+          ))
+        )}
       </div>
 
       {/* Birth New Agent CTA */}
@@ -189,11 +219,28 @@ export default function AgentMarketplace({ onEnterWorld }: Props) {
             <span>💰 0.01 MON minimum</span>
             <span>🎨 Custom world style</span>
           </div>
-          <button className="btn-birth" disabled={isDemo}>
-            {isDemo ? 'Deploy Contract First' : 'Birth Agent'}
+          <button 
+            className="btn-birth" 
+            onClick={() => setShowBirthModal(true)}
+            disabled={!isConnected || birthPending || birthConfirming}
+          >
+            {!isConnected ? 'Connect Wallet First' : 
+             birthPending ? 'Confirm in Wallet...' :
+             birthConfirming ? 'Birthing...' :
+             'Birth Agent'}
           </button>
         </div>
       </div>
+
+      {/* Transaction Status */}
+      {(enterPending || enterConfirming || fundPending || fundConfirming) && (
+        <div className="tx-status">
+          <div className="tx-spinner"></div>
+          <span>
+            {enterPending || fundPending ? 'Confirm in wallet...' : 'Waiting for confirmation...'}
+          </span>
+        </div>
+      )}
 
       {/* Notification Toast */}
       {notification && (
@@ -202,10 +249,69 @@ export default function AgentMarketplace({ onEnterWorld }: Props) {
         </div>
       )}
 
+      {/* Birth Modal (simplified) */}
+      {showBirthModal && (
+        <div className="modal-overlay" onClick={() => setShowBirthModal(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <h2>🐣 Birth New Agent</h2>
+            <form onSubmit={async (e) => {
+              e.preventDefault()
+              const form = e.target as HTMLFormElement
+              const data = new FormData(form)
+              try {
+                await birthAgent(
+                  data.get('name') as string,
+                  data.get('style') as string,
+                  parseFloat(data.get('entryFee') as string),
+                  parseInt(data.get('rewardPercent') as string),
+                  parseFloat(data.get('funding') as string)
+                )
+                setShowBirthModal(false)
+                showNotification('🎉 Agent birth initiated!')
+              } catch (err: any) {
+                showNotification(`❌ ${err.message}`)
+              }
+            }}>
+              <label>
+                Agent Name
+                <input name="name" required placeholder="e.g. NeoJungler" />
+              </label>
+              <label>
+                World Style
+                <select name="style" required>
+                  <option value="neon_jungle">🌿 Neon Jungle</option>
+                  <option value="cyber_ruins">🏚️ Cyber Ruins</option>
+                  <option value="crystal_caves">💎 Crystal Caves</option>
+                  <option value="void_space">🌌 Void Space</option>
+                </select>
+              </label>
+              <label>
+                Entry Fee (MON)
+                <input name="entryFee" type="number" step="0.001" defaultValue="0.003" required />
+              </label>
+              <label>
+                Reward % (to players)
+                <input name="rewardPercent" type="number" min="50" max="90" defaultValue="75" required />
+              </label>
+              <label>
+                Initial Funding (MON)
+                <input name="funding" type="number" step="0.01" defaultValue="0.05" required />
+              </label>
+              <div className="modal-actions">
+                <button type="button" onClick={() => setShowBirthModal(false)}>Cancel</button>
+                <button type="submit" disabled={birthPending || birthConfirming}>
+                  {birthPending ? 'Confirm...' : birthConfirming ? 'Birthing...' : 'Birth Agent'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       <style jsx>{`
         .marketplace {
           min-height: 100vh;
-          background: var(--dark);
+          background: #0a0a0a;
           padding: 2rem;
         }
 
@@ -221,7 +327,7 @@ export default function AgentMarketplace({ onEnterWorld }: Props) {
 
         .title-section h1 {
           font-size: 2.5rem;
-          background: linear-gradient(45deg, var(--primary), var(--secondary));
+          background: linear-gradient(45deg, #00ff88, #00aaff);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
@@ -233,24 +339,48 @@ export default function AgentMarketplace({ onEnterWorld }: Props) {
           font-size: 1.1rem;
         }
 
-        .demo-badge {
-          display: inline-block;
+        .chain-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
           margin-top: 0.5rem;
           padding: 0.25rem 0.75rem;
-          background: rgba(255, 170, 0, 0.2);
-          border: 1px solid #ffaa00;
-          border-radius: 4px;
-          color: #ffaa00;
-          font-size: 0.8rem;
+          background: rgba(0, 255, 136, 0.1);
+          border: 1px solid #00ff88;
+          border-radius: 20px;
+          color: #00ff88;
+          font-size: 0.85rem;
         }
 
-        .global-stats {
+        .chain-dot {
+          width: 8px;
+          height: 8px;
+          background: #00ff88;
+          border-radius: 50%;
+          animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+
+        .header-right {
           display: flex;
+          align-items: center;
+          gap: 1rem;
+        }
+
+        .stats-bar {
+          max-width: 1400px;
+          margin: 0 auto 1rem;
+          display: flex;
+          align-items: center;
           gap: 2rem;
-          background: var(--card);
+          background: #111;
           padding: 1rem 2rem;
           border-radius: 12px;
-          border: 1px solid var(--border);
+          border: 1px solid #222;
         }
 
         .global-stat {
@@ -261,20 +391,31 @@ export default function AgentMarketplace({ onEnterWorld }: Props) {
           display: block;
           font-size: 1.5rem;
           font-weight: bold;
-          color: var(--primary);
-        }
-
-        .global-stat .stat-value.active {
-          color: var(--primary);
+          color: #00ff88;
         }
 
         .global-stat .stat-value.dormant {
-          color: var(--danger);
+          color: #ff4444;
         }
 
         .global-stat .stat-label {
           font-size: 0.8rem;
           color: #666;
+        }
+
+        .btn-refresh {
+          margin-left: auto;
+          padding: 0.5rem 1rem;
+          background: transparent;
+          border: 1px solid #333;
+          border-radius: 8px;
+          color: #888;
+          cursor: pointer;
+        }
+
+        .btn-refresh:hover {
+          border-color: #00ff88;
+          color: #00ff88;
         }
 
         .erc-badge {
@@ -289,20 +430,9 @@ export default function AgentMarketplace({ onEnterWorld }: Props) {
           border-radius: 8px;
         }
 
-        .badge-icon {
-          font-size: 1.5rem;
-        }
-
-        .badge-text {
-          font-weight: bold;
-          color: #00aaff;
-        }
-
-        .badge-info {
-          color: #888;
-          font-size: 0.85rem;
-          margin-left: auto;
-        }
+        .badge-icon { font-size: 1.5rem; }
+        .badge-text { font-weight: bold; color: #00aaff; }
+        .badge-info { color: #888; font-size: 0.85rem; margin-left: auto; }
 
         .filters {
           max-width: 1400px;
@@ -321,8 +451,8 @@ export default function AgentMarketplace({ onEnterWorld }: Props) {
 
         .filter-group button {
           padding: 0.5rem 1rem;
-          background: var(--card);
-          border: 1px solid var(--border);
+          background: #111;
+          border: 1px solid #222;
           border-radius: 8px;
           color: #888;
           cursor: pointer;
@@ -330,14 +460,14 @@ export default function AgentMarketplace({ onEnterWorld }: Props) {
         }
 
         .filter-group button:hover {
-          border-color: var(--primary);
+          border-color: #00ff88;
           color: #fff;
         }
 
         .filter-group button.active {
-          background: var(--primary);
+          background: #00ff88;
           color: #000;
-          border-color: var(--primary);
+          border-color: #00ff88;
         }
 
         .sort-group {
@@ -349,8 +479,8 @@ export default function AgentMarketplace({ onEnterWorld }: Props) {
 
         .sort-group select {
           padding: 0.5rem;
-          background: var(--card);
-          border: 1px solid var(--border);
+          background: #111;
+          border: 1px solid #222;
           border-radius: 8px;
           color: #fff;
           cursor: pointer;
@@ -360,15 +490,22 @@ export default function AgentMarketplace({ onEnterWorld }: Props) {
           max-width: 1400px;
           margin: 0 auto;
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+          grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
           gap: 1.5rem;
+        }
+
+        .no-agents {
+          grid-column: 1 / -1;
+          text-align: center;
+          padding: 3rem;
+          color: #666;
         }
 
         .birth-cta {
           max-width: 1400px;
           margin: 3rem auto 0;
           background: linear-gradient(135deg, rgba(0, 255, 136, 0.1), rgba(0, 170, 255, 0.1));
-          border: 1px dashed var(--primary);
+          border: 1px dashed #00ff88;
           border-radius: 16px;
           padding: 2rem;
           text-align: center;
@@ -395,7 +532,7 @@ export default function AgentMarketplace({ onEnterWorld }: Props) {
 
         .btn-birth {
           padding: 0.75rem 2rem;
-          background: var(--primary);
+          background: #00ff88;
           border: none;
           border-radius: 8px;
           color: #000;
@@ -415,63 +552,135 @@ export default function AgentMarketplace({ onEnterWorld }: Props) {
           box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
         }
 
+        .tx-status {
+          position: fixed;
+          bottom: 6rem;
+          left: 50%;
+          transform: translateX(-50%);
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          background: #111;
+          padding: 1rem 2rem;
+          border-radius: 12px;
+          border: 1px solid #00aaff;
+          z-index: 1000;
+        }
+
+        .tx-spinner {
+          width: 20px;
+          height: 20px;
+          border: 2px solid #222;
+          border-top-color: #00aaff;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+        }
+
         .notification {
           position: fixed;
           bottom: 2rem;
           left: 50%;
           transform: translateX(-50%);
-          background: var(--card);
+          background: #111;
           padding: 1rem 2rem;
           border-radius: 12px;
-          border: 2px solid var(--primary);
+          border: 2px solid #00ff88;
           font-size: 1.1rem;
           animation: slideUp 0.3s ease;
           z-index: 1000;
         }
 
         @keyframes slideUp {
-          from {
-            opacity: 0;
-            transform: translate(-50%, 20px);
-          }
-          to {
-            opacity: 1;
-            transform: translate(-50%, 0);
-          }
+          from { opacity: 0; transform: translate(-50%, 20px); }
+          to { opacity: 1; transform: translate(-50%, 0); }
+        }
+
+        .modal-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.8);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 2000;
+        }
+
+        .modal {
+          background: #111;
+          border: 1px solid #333;
+          border-radius: 16px;
+          padding: 2rem;
+          max-width: 400px;
+          width: 90%;
+        }
+
+        .modal h2 {
+          margin-bottom: 1.5rem;
+          text-align: center;
+        }
+
+        .modal label {
+          display: block;
+          margin-bottom: 1rem;
+          color: #888;
+          font-size: 0.9rem;
+        }
+
+        .modal input, .modal select {
+          width: 100%;
+          padding: 0.75rem;
+          margin-top: 0.25rem;
+          background: #0a0a0a;
+          border: 1px solid #333;
+          border-radius: 8px;
+          color: #fff;
+          font-size: 1rem;
+        }
+
+        .modal input:focus, .modal select:focus {
+          outline: none;
+          border-color: #00ff88;
+        }
+
+        .modal-actions {
+          display: flex;
+          gap: 1rem;
+          margin-top: 1.5rem;
+        }
+
+        .modal-actions button {
+          flex: 1;
+          padding: 0.75rem;
+          border-radius: 8px;
+          font-weight: bold;
+          cursor: pointer;
+        }
+
+        .modal-actions button[type="button"] {
+          background: transparent;
+          border: 1px solid #333;
+          color: #888;
+        }
+
+        .modal-actions button[type="submit"] {
+          background: #00ff88;
+          border: none;
+          color: #000;
+        }
+
+        .modal-actions button:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
         }
 
         @media (max-width: 768px) {
-          .marketplace {
-            padding: 1rem;
-          }
-
-          .header {
-            flex-direction: column;
-          }
-
-          .global-stats {
-            width: 100%;
-            justify-content: space-around;
-          }
-
-          .title-section h1 {
-            font-size: 1.8rem;
-          }
-
-          .erc-badge {
-            flex-wrap: wrap;
-          }
-
-          .badge-info {
-            width: 100%;
-            margin-left: 0;
-            margin-top: 0.5rem;
-          }
-
-          .cta-details {
-            flex-direction: column;
-            gap: 0.5rem;
-          }
+          .marketplace { padding: 1rem; }
+          .header { flex-direction: column; }
+          .stats-bar { flex-wrap: wrap; gap: 1rem; }
+          .title-section h1 { font-size: 1.8rem; }
+          .erc-badge { flex-wrap: wrap; }
+          .badge-info { width: 100%; margin-left: 0; margin-top: 0.5rem; }
+          .cta-details { flex-direction: column; gap: 0.5rem; }
         }
       `}</style>
     </div>

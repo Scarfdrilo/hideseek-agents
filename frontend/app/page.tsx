@@ -48,21 +48,9 @@ function LoadingScreen({ text }: { text: string }) {
   )
 }
 
-type Screen = 'landing' | 'marketplace' | 'playing'
+import { type Agent } from '@/hooks/useAgentsReal'
 
-interface Agent {
-  id: number
-  name: string
-  worldStyle: string
-  personality: string
-  balance: number
-  totalEarnings: number
-  totalVisitors: number
-  entryFee: number
-  rewardPercent: number
-  state: 'Active' | 'Dormant' | 'Retired'
-  creator: string
-}
+type Screen = 'landing' | 'marketplace' | 'playing'
 
 export default function Home() {
   const [screen, setScreen] = useState<Screen>('landing')

@@ -1,8 +1,10 @@
 {
   "app/page.tsx -> @/components/AgentMarketplace": {
-    "id": 8152,
+    "id": 4526,
     "files": [
-      "static/chunks/152.99c2dcb73a3cb1f3.js"
+      "static/chunks/877-531b11d322892a12.js",
+      "static/chunks/154.a7ee6fac3d7ee1e3.js",
+      "static/chunks/526.80902af1b469e0a3.js"
     ]
   },
   "app/page.tsx -> @/components/MazeViewer": {
@@ -10,7 +12,7 @@
     "files": [
       "static/chunks/b536a0f1.69e6f0c640780c54.js",
       "static/chunks/226.e566896afc51c83c.js",
-      "static/chunks/412.d91926b50709bc5e.js"
+      "static/chunks/412.0f4f4336ae602f5f.js"
     ]
   },
   "node_modules/@react-three/drei/core/VideoTexture.js -> hls.js": {
@@ -19,6 +21,20 @@
   },
   "node_modules/@react-three/drei/web/FaceLandmarker.js -> @mediapipe/tasks-vision": {
     "id": null,
+    "files": []
+  },
+  "node_modules/viem/_esm/actions/public/call.js -> ../../utils/ccip.js": {
+    "id": 4844,
+    "files": [
+      "static/chunks/735.723ffe93c6d507a9.js"
+    ]
+  },
+  "node_modules/viem/_esm/utils/rpc/webSocket.js -> isows": {
+    "id": null,
+    "files": []
+  },
+  "node_modules/viem/_esm/utils/signature/recoverPublicKey.js -> @noble/curves/secp256k1": {
+    "id": 9345,
     "files": []
   }
 }
