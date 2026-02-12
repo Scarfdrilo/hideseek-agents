@@ -41,6 +41,7 @@ contract AgentRegistryV2Optimized is ERC721, ReentrancyGuard, Ownable, Pausable 
     mapping(uint256 => string) public agentStyles;
     mapping(bytes32 => bool) public nameTaken;
     mapping(address => bool) public authorizedGames;
+    mapping(uint256 => mapping(address => bool)) public hasVisited; // agentId => visitor => paid
     
     // ============ Constants ============
     
@@ -49,7 +50,7 @@ contract AgentRegistryV2Optimized is ERC721, ReentrancyGuard, Ownable, Pausable 
     uint128 public constant REVIVAL_COST = 0.01 ether;
     uint128 public constant DORMANCY_THRESHOLD = 0.001 ether;
     uint16 public constant CREATOR_FEE_PERCENT = 10;
-    uint16 public constant DEFAULT_BURN_RATE = 1; // 0.0001 MON/hour
+    uint16 public constant DEFAULT_BURN_RATE = 0; // No burn
     
     // ============ Custom Errors (Gas efficient) ============
     
@@ -150,7 +151,17 @@ contract AgentRegistryV2Optimized is ERC721, ReentrancyGuard, Ownable, Pausable 
         
         Agent storage a = agents[id];
         if (a.state != AgentState.Active) revert NotActive();
+        
+        // Free re-entry if already paid
+        if (hasVisited[id][msg.sender]) {
+            emit WorldVisited(id, msg.sender, 0);
+            return;
+        }
+        
+        // First visit requires entry fee
         if (msg.value < a.entryFee) revert InsufficientFunds();
+        
+        hasVisited[id][msg.sender] = true;
         
         uint128 creatorFee = uint128((msg.value * CREATOR_FEE_PERCENT) / 100);
         uint128 agentShare = uint128(msg.value) - creatorFee;
@@ -299,5 +310,9 @@ contract AgentRegistryV2Optimized is ERC721, ReentrancyGuard, Ownable, Pausable 
     function getPending(uint256 id) external view returns (uint128) {
         if (id == 0 || id > agentCounter) revert NotExists();
         return agents[id].creatorPending;
+    }
+    
+    function hasPaidEntry(uint256 id, address visitor) external view returns (bool) {
+        return hasVisited[id][visitor];
     }
 }

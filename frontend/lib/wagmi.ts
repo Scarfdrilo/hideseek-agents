@@ -25,8 +25,8 @@ export const monad = defineChain({
 // Reown Project ID
 export const REOWN_PROJECT_ID = process.env.NEXT_PUBLIC_REOWN_PROJECT_ID || 'demo'
 
-// Contract address
-export const AGENT_REGISTRY = '0x8057355a60008AD9AdBaFEF0fB8F78573cEC3BA4' as const
+// Contract address (V3: no burn, free re-entry)
+export const AGENT_REGISTRY = '0x769c418EA0481f45Ea20071186cd00013Ef7eD28' as const
 
 // ABI for the optimized contract
 export const AGENT_REGISTRY_ABI = [
@@ -88,6 +88,16 @@ export const AGENT_REGISTRY_ABI = [
       { name: 'rewardPercent', type: 'uint8' },
     ],
     outputs: [{ type: 'uint256' }],
+  },
+  {
+    name: 'hasPaidEntry',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [
+      { name: 'id', type: 'uint256' },
+      { name: 'visitor', type: 'address' },
+    ],
+    outputs: [{ type: 'bool' }],
   },
   // Events
   {
