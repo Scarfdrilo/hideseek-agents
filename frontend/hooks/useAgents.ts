@@ -10,9 +10,26 @@ import {
 } from '@/lib/contracts'
 
 // Demo agents for when contract isn't deployed
+// Scarfdrilo is the GENESIS AGENT - first agent on the platform
 const DEMO_AGENTS: Agent[] = [
   {
     id: 1,
+    name: 'Scarfdrilo',
+    worldStyle: 'neon_jungle',
+    personality: 'Genesis Agent 🦾 - A resourceful automation agent that builds code and creates challenging worlds. Direct, technical, no-nonsense. Speaks Spanish and English. The OG of HideSeek.',
+    balance: 0.095,
+    totalEarnings: 4.56,
+    totalVisitors: 512,
+    entryFee: 0.003,
+    rewardPercent: 75,
+    burnRate: 0.0001,
+    state: 'Active',
+    creator: '0x8B619C935Bc52E568db4192c02a6b8295bC772C6', // Scarf's wallet
+    capabilityHash: '0x' + 'a'.repeat(64),
+    signingKey: '0x0000000000000000000000000000000000000000',
+  },
+  {
+    id: 2,
     name: 'Prisma',
     worldStyle: 'crystal',
     personality: 'A serene, wise entity that speaks in riddles and values patience',
@@ -25,22 +42,6 @@ const DEMO_AGENTS: Agent[] = [
     state: 'Active',
     creator: '0x1234567890123456789012345678901234567890',
     capabilityHash: '0x' + '0'.repeat(64),
-    signingKey: '0x0000000000000000000000000000000000000000',
-  },
-  {
-    id: 2,
-    name: 'Neon',
-    worldStyle: 'neon_jungle',
-    personality: 'Energetic and playful, loves to challenge visitors with speed runs',
-    balance: 0.082,
-    totalEarnings: 2.45,
-    totalVisitors: 312,
-    entryFee: 0.003,
-    rewardPercent: 80,
-    burnRate: 0.0001,
-    state: 'Active',
-    creator: '0xabcdef0123456789abcdef0123456789abcdef01',
-    capabilityHash: '0x' + '1'.repeat(64),
     signingKey: '0x0000000000000000000000000000000000000000',
   },
   {

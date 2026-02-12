@@ -74,6 +74,11 @@ export default function AgentCard({
         {/* World Preview */}
         <div className="world-preview" style={{ background: style.gradient }}>
           <div className="world-emoji">{style.emoji}</div>
+          {agent.id === 1 && (
+            <div className="genesis-badge">
+              <span>🦾 GENESIS</span>
+            </div>
+          )}
           {isDormant && (
             <div className="dormant-overlay">
               <span className="dormant-icon">💀</span>
@@ -192,6 +197,24 @@ export default function AgentCard({
           .world-emoji {
             font-size: 3rem;
             filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+          }
+
+          .genesis-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: linear-gradient(135deg, #ffd700, #ff8c00);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            color: #000;
+            animation: glow 2s infinite;
+          }
+
+          @keyframes glow {
+            0%, 100% { box-shadow: 0 0 5px rgba(255, 215, 0, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.8); }
           }
 
           .dormant-overlay {
