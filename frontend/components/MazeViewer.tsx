@@ -251,7 +251,9 @@ export default function MazeViewer() {
   // Quality settings - auto detects mobile
   const effectiveQuality = quality === 'auto' ? (isMobile ? 'low' : 'high') : quality
   const useFog = effectiveQuality === 'high'
-  const lightIntensity = effectiveQuality === 'high' ? 0.4 : 0.25
+  const lightIntensity = effectiveQuality === 'high' ? 0.5 : 0.4
+  const ambientIntensity = effectiveQuality === 'high' ? 0.35 : 0.6  // Much brighter on mobile
+  const bgColor = effectiveQuality === 'high' ? '#050508' : '#101520'  // Lighter bg on mobile
 
   return (
     <div className="viewer-container">
@@ -260,15 +262,19 @@ export default function MazeViewer() {
         <CameraRig target={playerPos} />
         
         {/* Fog for depth - skip on low quality */}
-        {useFog && <fog attach="fog" args={['#050508', 8, 40]} />}
-        <color attach="background" args={['#050508']} />
+        {useFog && <fog attach="fog" args={['#050508', 12, 50]} />}
+        <color attach="background" args={[bgColor]} />
         
-        {/* Lighting - reduced on low quality */}
-        <ambientLight intensity={effectiveQuality === 'high' ? 0.25 : 0.35} color="#aaccff" />
-        <directionalLight position={[5, 10, 5]} intensity={lightIntensity} color="#ffffff" />
-        {effectiveQuality === 'high' && <hemisphereLight args={['#224466', '#112233', 0.3]} />}
+        {/* Lighting - brighter on mobile for visibility */}
+        <ambientLight intensity={ambientIntensity} color="#aaccff" />
+        <directionalLight position={[5, 15, 5]} intensity={lightIntensity} color="#ffffff" />
+        {effectiveQuality === 'high' ? (
+          <hemisphereLight args={['#224466', '#112233', 0.3]} />
+        ) : (
+          <hemisphereLight args={['#446688', '#223344', 0.5]} />
+        )}
         
-        <Maze3D data={mazeData} />
+        <Maze3D data={mazeData} brightMode={effectiveQuality === 'low'} />
         <Player 
           position={playerPos} 
           movement={movement}

@@ -2,7 +2,14 @@
   "name": "hideseek-skill",
   "version": "1.0.0",
   "description": "OpenClaw skill for interacting with HideSeek Agents on Monad",
-  "keywords": ["hideseek", "monad", "ai-agents", "blockchain", "game", "openclaw"],
+  "keywords": [
+    "hideseek",
+    "monad",
+    "ai-agents",
+    "blockchain",
+    "game",
+    "openclaw"
+  ],
   "author": "Scarfdrilo",
   "license": "MIT",
   "repository": {
@@ -20,6 +27,7 @@
     "birth": "node scripts/birth-agent.js"
   },
   "dependencies": {
+    "ethers": "^6.16.0",
     "viem": "^2.0.0"
   }
 }

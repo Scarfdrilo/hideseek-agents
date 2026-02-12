@@ -11,9 +11,10 @@ interface MazeProps {
     height: number
     hidingSpots: { x: number; y: number }[]
   }
+  brightMode?: boolean  // Lighter colors for mobile
 }
 
-// Biomes for visual variety
+// Biomes for visual variety - normal and bright versions
 const BIOMES = {
   neon_core: { wall: new THREE.Color('#001122'), glow: new THREE.Color('#00ffcc'), floor: '#0a0a0a' },
   crystal: { wall: new THREE.Color('#110022'), glow: new THREE.Color('#cc88ff'), floor: '#080810' },
@@ -21,7 +22,16 @@ const BIOMES = {
   ember: { wall: new THREE.Color('#110800'), glow: new THREE.Color('#ff6600'), floor: '#0a0500' },
 }
 
-function getBiome(x: number, z: number, width: number, height: number) {
+// Brighter biomes for mobile
+const BIOMES_BRIGHT = {
+  neon_core: { wall: new THREE.Color('#002244'), glow: new THREE.Color('#00ffcc'), floor: '#151520' },
+  crystal: { wall: new THREE.Color('#221044'), glow: new THREE.Color('#cc88ff'), floor: '#151518' },
+  toxic: { wall: new THREE.Color('#1a2200'), glow: new THREE.Color('#88ff00'), floor: '#101508' },
+  ember: { wall: new THREE.Color('#221800'), glow: new THREE.Color('#ff6600'), floor: '#151008' },
+}
+
+function getBiome(x: number, z: number, width: number, height: number, bright = false) {
+  const biomeSet = bright ? BIOMES_BRIGHT : BIOMES
   const cx = width / 2
   const cz = height / 2
   const dx = x - cx
@@ -29,12 +39,12 @@ function getBiome(x: number, z: number, width: number, height: number) {
   const angle = Math.atan2(dz, dx)
   const dist = Math.sqrt(dx * dx + dz * dz)
   
-  if (dist < 5) return BIOMES.neon_core
+  if (dist < 5) return biomeSet.neon_core
   const noise = Math.sin(x * 0.5) * Math.cos(z * 0.5)
-  if (angle > 0 && angle < Math.PI / 2) return noise > 0.3 ? BIOMES.crystal : BIOMES.neon_core
-  if (angle > Math.PI / 2) return noise > 0.3 ? BIOMES.toxic : BIOMES.crystal
-  if (angle < -Math.PI / 2) return noise > 0.3 ? BIOMES.ember : BIOMES.toxic
-  return noise > 0.3 ? BIOMES.neon_core : BIOMES.ember
+  if (angle > 0 && angle < Math.PI / 2) return noise > 0.3 ? biomeSet.crystal : biomeSet.neon_core
+  if (angle > Math.PI / 2) return noise > 0.3 ? biomeSet.toxic : biomeSet.crystal
+  if (angle < -Math.PI / 2) return noise > 0.3 ? biomeSet.ember : biomeSet.toxic
+  return noise > 0.3 ? biomeSet.neon_core : biomeSet.ember
 }
 
 // Instanced walls - HUGE performance boost
@@ -73,7 +83,7 @@ function InstancedWalls({ walls }: { walls: { x: number; z: number; height: numb
 }
 
 // Merged floor - single draw call
-function MergedFloor({ tiles }: { tiles: { x: number; z: number }[] }) {
+function MergedFloor({ tiles, color = '#0a0a0a' }: { tiles: { x: number; z: number }[], color?: string }) {
   const geometry = useMemo(() => {
     const positions: number[] = []
     const indices: number[] = []
@@ -109,7 +119,7 @@ function MergedFloor({ tiles }: { tiles: { x: number; z: number }[] }) {
 
   return (
     <mesh geometry={geometry} position={[0, -0.05, 0]}>
-      <meshStandardMaterial color="#0a0a0a" />
+      <meshStandardMaterial color={color} />
     </mesh>
   )
 }
@@ -173,7 +183,7 @@ function InstancedDecorations({ decorations }: { decorations: { x: number; z: nu
   )
 }
 
-export default function Maze3DOptimized({ data }: MazeProps) {
+export default function Maze3DOptimized({ data, brightMode = false }: MazeProps) {
   const { maze, width, height } = data
 
   const processedData = useMemo(() => {
@@ -187,7 +197,7 @@ export default function Maze3DOptimized({ data }: MazeProps) {
         const tile = maze[y][x]
         const posX = x - width / 2
         const posZ = y - height / 2
-        const biome = getBiome(x, y, width, height)
+        const biome = getBiome(x, y, width, height, brightMode)
 
         if (tile === 'WALL') {
           const wallHeight = 2 + Math.sin(x * 0.7 + y * 0.5) * 0.5
@@ -208,7 +218,7 @@ export default function Maze3DOptimized({ data }: MazeProps) {
     }
 
     return { walls, floors, hidingSpots, decorations }
-  }, [maze, width, height])
+  }, [maze, width, height, brightMode])
 
   return (
     <group>
@@ -216,7 +226,7 @@ export default function Maze3DOptimized({ data }: MazeProps) {
       <InstancedWalls walls={processedData.walls} />
       
       {/* Merged floor - 1 draw call */}
-      <MergedFloor tiles={processedData.floors} />
+      <MergedFloor tiles={processedData.floors} color={brightMode ? '#151520' : '#0a0a0a'} />
       
       {/* Instanced decorations - 1 draw call per type */}
       <InstancedDecorations decorations={processedData.decorations} />
