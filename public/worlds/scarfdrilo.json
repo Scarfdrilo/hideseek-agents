@@ -1,0 +1,390 @@
+{
+  "name": "Scarfdrilo",
+  "theme": "swamp",
+  "size": 15,
+  "complexity": 0.6,
+  "seed": 1771021694054,
+  "maze": [
+    [
+      "WALL",
+      "WALL",
+      "WALL",
+      "WALL",
+      "WALL",
+      "WALL",
+      "WALL",
+      "WALL",
+      "WALL",
+      "WALL",
+      "WALL",
+      "WALL",
+      "WALL",
+      "WALL",
+      "WALL"
+    ],
+    [
+      "WALL",
+      "EXIT",
+      "HIDING",
+      "FLOOR",
+      "WALL",
+      "FLOOR",
+      "SHRINE",
+      "FLOOR",
+      "FLOOR",
+      "FLOOR",
+      "FLOOR",
+      "FLOOR",
+      "FLOOR",
+      "FLOOR",
+      "WALL"
+    ],
+    [
+      "WALL",
+      "WALL",
+      "WALL",
+      "HOBBY_ZONE",
+      "WALL",
+      "FLOOR",
+      "WALL",
+      "WALL",
+      "WALL",
+      "WALL",
+      "WALL",
+      "WALL",
+      "WALL",
+      "FLOOR",
+      "WALL"
+    ],
+    [
+      "WALL",
+      "MEMORIAL",
+      "WALL",
+      "FLOOR",
+      "WALL",
+      "HIDING",
+      "FLOOR",
+      "FLOOR",
+      "FLOOR",
+      "FLOOR",
+      "FLOOR",
+      "FLOOR",
+      "WALL",
+      "FLOOR",
+      "WALL"
+    ],
+    [
+      "WALL",
+      "FLOOR",
+      "WALL",
+      "FLOOR",
+      "WALL",
+      "WALL",
+      "WALL",
+      "FLOOR",
+      "WALL",
+      "WALL",
+      "WALL",
+      "FLOOR",
+      "WALL",
+      "FLOOR",
+      "WALL"
+    ],
+    [
+      "WALL",
+      "FLOOR",
+      "WALL",
+      "FLOOR",
+      "FLOOR",
+      "FLOOR",
+      "WALL",
+      "FLOOR",
+      "WALL",
+      "FLOOR",
+      "FLOOR",
+      "FLOOR",
+      "WALL",
+      "FLOOR",
+      "WALL"
+    ],
+    [
+      "WALL",
+      "FLOOR",
+      "WALL",
+      "WALL",
+      "WALL",
+      "FLOOR",
+      "WALL",
+      "FLOOR",
+      "WALL",
+      "FLOOR",
+      "FLOOR",
+      "WALL",
+      "WALL",
+      "WALL",
+      "WALL"
+    ],
+    [
+      "WALL",
+      "FLOOR",
+      "FLOOR",
+      "FLOOR",
+      "WALL",
+      "FLOOR",
+      "WALL",
+      "START",
+      "WALL",
+      "FLOOR",
+      "FLOOR",
+      "FLOOR",
+      "FLOOR",
+      "FLOOR",
+      "WALL"
+    ],
+    [
+      "WALL",
+      "HIDING",
+      "WALL",
+      "WALL",
+      "WALL",
+      "FLOOR",
+      "WALL",
+      "FLOOR",
+      "WALL",
+      "WALL",
+      "WALL",
+      "WALL",
+      "WALL",
+      "FLOOR",
+      "WALL"
+    ],
+    [
+      "WALL",
+      "FLOOR",
+      "FLOOR",
+      "MEMORIAL",
+      "FLOOR",
+      "FLOOR",
+      "WALL",
+      "FLOOR",
+      "FLOOR",
+      "FLOOR",
+      "FLOOR",
+      "FLOOR",
+      "FLOOR",
+      "FLOOR",
+      "WALL"
+    ],
+    [
+      "WALL",
+      "FLOOR",
+      "WALL",
+      "WALL",
+      "WALL",
+      "WALL",
+      "WALL",
+      "WALL",
+      "WALL",
+      "WALL",
+      "WALL",
+      "FLOOR",
+      "WALL",
+      "FLOOR",
+      "WALL"
+    ],
+    [
+      "WALL",
+      "FLOOR",
+      "FLOOR",
+      "FLOOR",
+      "WALL",
+      "FLOOR",
+      "FLOOR",
+      "FLOOR",
+      "MEMORIAL",
+      "FLOOR",
+      "WALL",
+      "FLOOR",
+      "WALL",
+      "FLOOR",
+      "WALL"
+    ],
+    [
+      "WALL",
+      "WALL",
+      "WALL",
+      "SHRINE",
+      "WALL",
+      "FLOOR",
+      "FLOOR",
+      "WALL",
+      "FLOOR",
+      "FLOOR",
+      "WALL",
+      "WALL",
+      "WALL",
+      "FLOOR",
+      "WALL"
+    ],
+    [
+      "WALL",
+      "FLOOR",
+      "FLOOR",
+      "FLOOR",
+      "FLOOR",
+      "FLOOR",
+      "WALL",
+      "FLOOR",
+      "FLOOR",
+      "FLOOR",
+      "FLOOR",
+      "FLOOR",
+      "FLOOR",
+      "FLOOR",
+      "WALL"
+    ],
+    [
+      "WALL",
+      "WALL",
+      "WALL",
+      "WALL",
+      "WALL",
+      "WALL",
+      "WALL",
+      "WALL",
+      "WALL",
+      "WALL",
+      "WALL",
+      "WALL",
+      "WALL",
+      "WALL",
+      "WALL"
+    ]
+  ],
+  "start": {
+    "x": 7,
+    "y": 7
+  },
+  "exit": {
+    "x": 1,
+    "y": 1
+  },
+  "hidingSpots": [
+    {
+      "x": 5,
+      "y": 3
+    },
+    {
+      "x": 1,
+      "y": 8
+    },
+    {
+      "x": 2,
+      "y": 1
+    }
+  ],
+  "memoryElements": [
+    {
+      "type": "person",
+      "tile": "MEMORIAL",
+      "name": "Frontend",
+      "description": "** https://hideseek-agents.vercel.app/",
+      "reason": "Memory of Frontend",
+      "color": "#ff88cc",
+      "position": {
+        "x": 8,
+        "y": 11
+      }
+    },
+    {
+      "type": "person",
+      "tile": "MEMORIAL",
+      "name": "Creator wallet",
+      "description": "** 0x8B619C935Bc52E568db4192c02a6b8295bC772C6 (~17.55 MON)",
+      "reason": "Memory of Creator wallet",
+      "color": "#ff88cc",
+      "position": {
+        "x": 3,
+        "y": 9
+      }
+    },
+    {
+      "type": "person",
+      "tile": "MEMORIAL",
+      "name": "Convex prod",
+      "description": "** https://brainy-porcupine-595.convex.cloud",
+      "reason": "Memory of Convex prod",
+      "color": "#ff88cc",
+      "position": {
+        "x": 1,
+        "y": 3
+      }
+    },
+    {
+      "type": "hobby",
+      "tile": "HOBBY_ZONE",
+      "name": "teje",
+      "description": "Zone inspired by: teje",
+      "reason": "Agent memory contains interest in \"teje\"",
+      "color": "#ffaa00",
+      "position": {
+        "x": 3,
+        "y": 2
+      }
+    },
+    {
+      "type": "interest",
+      "tile": "SHRINE",
+      "name": "series",
+      "description": "Zone inspired by: series",
+      "reason": "Agent memory contains interest in \"series\"",
+      "color": "#aa00ff",
+      "position": {
+        "x": 3,
+        "y": 12
+      }
+    },
+    {
+      "type": "interest",
+      "tile": "SHRINE",
+      "name": "code",
+      "description": "Zone inspired by: code",
+      "reason": "Agent memory contains interest in \"code\"",
+      "color": "#aa00ff",
+      "position": {
+        "x": 6,
+        "y": 1
+      }
+    }
+  ],
+  "colors": {
+    "wall": "#1a3d2e",
+    "wallTop": "#2a5d3e",
+    "wallSide": "#0a2d1e",
+    "floor": "#0d1f15",
+    "floorAlt": "#0f2518",
+    "start": "#00ff66",
+    "exit": "#ff4400",
+    "hiding": "#00aacc",
+    "glow": "#33ff99",
+    "bg": "#050a08"
+  },
+  "lore": "A world shaped by memories of teje, series, code, with echoes of Frontend & Creator wallet...",
+  "memoryStats": {
+    "peopleCount": 5,
+    "interestsCount": 12,
+    "keywordsFound": [
+      "moltbook",
+      "agent",
+      "scarf",
+      "agents",
+      "hideseek",
+      "posts",
+      "created",
+      "convex",
+      "bootcamp",
+      "hackathon"
+    ]
+  },
+  "generatedAt": "2026-02-13T22:28:14.062Z"
+}
