@@ -3,22 +3,23 @@
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
+import { type Agent } from '@/hooks/useAgentsReal'
 
-const MazeViewer = dynamic(() => import('@/components/MazeViewer'), {
+const IsometricMaze = dynamic(() => import('@/components/IsometricMaze'), {
   ssr: false,
-  loading: () => <LoadingScreen text="Loading 3D World..." />
+  loading: () => <LoadingScreen text="Loading World..." />
 })
 
 const AgentMarketplace = dynamic(() => import('@/components/AgentMarketplace'), {
   ssr: false,
-  loading: () => <LoadingScreen text="Loading Marketplace..." />
+  loading: () => <LoadingScreen text="Loading Agents..." />
 })
 
 function LoadingScreen({ text }: { text: string }) {
   return (
     <div className="loading-screen">
-      <div className="loader"></div>
-      <p>{text}</p>
+      <div className="pixel-loader"></div>
+      <p className="pixel-text">{text}</p>
       <style jsx>{`
         .loading-screen {
           min-height: 100vh;
@@ -26,44 +27,93 @@ function LoadingScreen({ text }: { text: string }) {
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          background: #0a0a0a;
+          background: #0a0a12;
           gap: 1rem;
+          image-rendering: pixelated;
         }
-        .loader {
-          width: 50px;
-          height: 50px;
-          border: 3px solid #222;
-          border-top-color: #00ff88;
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
+        .pixel-loader {
+          width: 48px;
+          height: 48px;
+          background: linear-gradient(90deg, #00ff88 25%, transparent 25%);
+          background-size: 12px 12px;
+          animation: pixel-load 0.5s steps(4) infinite;
         }
-        @keyframes spin {
-          to { transform: rotate(360deg); }
+        @keyframes pixel-load {
+          to { background-position: 48px 0; }
         }
-        p {
-          color: #888;
-          font-size: 1.1rem;
+        .pixel-text {
+          color: #00ff88;
+          font-family: monospace;
+          font-size: 14px;
+          text-transform: uppercase;
+          letter-spacing: 2px;
         }
       `}</style>
     </div>
   )
 }
 
-import { type Agent } from '@/hooks/useAgentsReal'
+// Generate demo maze for landing
+function generateDemoMaze() {
+  const size = 15;
+  const maze: string[][] = [];
+  
+  for (let y = 0; y < size; y++) {
+    maze[y] = [];
+    for (let x = 0; x < size; x++) {
+      maze[y][x] = 'WALL';
+    }
+  }
+  
+  // Simple DFS
+  const stack: [number, number][] = [];
+  maze[1][1] = 'FLOOR';
+  stack.push([1, 1]);
+  
+  const directions = [[0, -2], [0, 2], [-2, 0], [2, 0]];
+  
+  while (stack.length > 0) {
+    const [cx, cz] = stack[stack.length - 1];
+    const shuffled = [...directions].sort(() => Math.random() - 0.5);
+    let carved = false;
+    
+    for (const [dx, dz] of shuffled) {
+      const nx = cx + dx;
+      const nz = cz + dz;
+      
+      if (nx > 0 && nx < size - 1 && nz > 0 && nz < size - 1 && maze[nz][nx] === 'WALL') {
+        maze[cz + dz / 2][cx + dx / 2] = 'FLOOR';
+        maze[nz][nx] = 'FLOOR';
+        stack.push([nx, nz]);
+        carved = true;
+        break;
+      }
+    }
+    
+    if (!carved) stack.pop();
+  }
+  
+  maze[1][1] = 'START';
+  maze[size - 2][size - 2] = 'EXIT';
+  maze[3][5] = 'HIDING';
+  maze[7][9] = 'HIDING';
+  
+  return {
+    maze,
+    width: size,
+    height: size,
+    hidingSpots: [{ x: 5, y: 3 }, { x: 9, y: 7 }],
+    start: { x: 1, y: 1 }
+  };
+}
 
 type Screen = 'landing' | 'marketplace' | 'playing'
 
 export default function Home() {
   const [screen, setScreen] = useState<Screen>('landing')
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null)
-  const [showIntro, setShowIntro] = useState(true)
-
-  useEffect(() => {
-    if (screen === 'landing') {
-      const timer = setTimeout(() => setShowIntro(false), 500)
-      return () => clearTimeout(timer)
-    }
-  }, [screen])
+  const [demoMaze, setDemoMaze] = useState(() => generateDemoMaze())
+  const [theme, setTheme] = useState<'neon' | 'forest' | 'dungeon' | 'candy'>('neon')
 
   const handleEnterWorld = (agent: Agent) => {
     setSelectedAgent(agent)
@@ -75,27 +125,42 @@ export default function Home() {
     setSelectedAgent(null)
   }
 
+  // Cycle themes for demo
+  useEffect(() => {
+    if (screen === 'landing') {
+      const themes: ('neon' | 'forest' | 'dungeon' | 'candy')[] = ['neon', 'forest', 'dungeon', 'candy']
+      let idx = 0
+      const interval = setInterval(() => {
+        idx = (idx + 1) % themes.length
+        setTheme(themes[idx])
+        setDemoMaze(generateDemoMaze())
+      }, 8000)
+      return () => clearInterval(interval)
+    }
+  }, [screen])
+
   if (screen === 'playing' && selectedAgent) {
     return (
       <div className="game-container">
         <div className="game-header">
-          <button className="btn-back" onClick={handleBack}>
-            ← Back
+          <button className="pixel-btn" onClick={handleBack}>
+            ◀ BACK
           </button>
           <div className="agent-banner">
-            <span className="agent-name">{selectedAgent.name}&apos;s World</span>
+            <span className="agent-name">{selectedAgent.name}</span>
             <span className="agent-style">{selectedAgent.worldStyle}</span>
           </div>
           <div className="agent-life">
             ⚡ {selectedAgent.balance.toFixed(4)} MON
           </div>
         </div>
-        <MazeViewer />
+        <IsometricMaze data={demoMaze} theme="neon" tileSize={40} />
         <style jsx>{`
           .game-container {
             position: relative;
             width: 100vw;
             height: 100vh;
+            background: #0a0a12;
           }
           .game-header {
             position: absolute;
@@ -107,19 +172,21 @@ export default function Home() {
             justify-content: space-between;
             align-items: center;
             padding: 1rem;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+            background: linear-gradient(to bottom, rgba(10,10,18,0.95), transparent);
           }
-          .btn-back {
+          .pixel-btn {
             padding: 0.5rem 1rem;
-            background: rgba(0, 0, 0, 0.6);
-            border: 1px solid #333;
-            border-radius: 8px;
-            color: #fff;
+            background: #1a1a2e;
+            border: 2px solid #00ff88;
+            color: #00ff88;
+            font-family: monospace;
+            font-size: 12px;
             cursor: pointer;
-            font-size: 0.9rem;
+            image-rendering: pixelated;
           }
-          .btn-back:hover {
-            border-color: #00ff88;
+          .pixel-btn:hover {
+            background: #00ff88;
+            color: #0a0a12;
           }
           .agent-banner {
             display: flex;
@@ -130,19 +197,21 @@ export default function Home() {
             font-size: 1.2rem;
             font-weight: bold;
             color: #00ff88;
+            font-family: monospace;
           }
           .agent-style {
-            font-size: 0.8rem;
-            color: #888;
-            text-transform: capitalize;
+            font-size: 0.75rem;
+            color: #666;
+            text-transform: uppercase;
+            font-family: monospace;
           }
           .agent-life {
             padding: 0.5rem 1rem;
-            background: rgba(0, 0, 0, 0.6);
-            border: 1px solid #00ff88;
-            border-radius: 8px;
+            background: #1a1a2e;
+            border: 2px solid #00ff88;
             color: #00ff88;
-            font-weight: bold;
+            font-family: monospace;
+            font-size: 12px;
           }
         `}</style>
       </div>
@@ -153,294 +222,239 @@ export default function Home() {
     return <AgentMarketplace onEnterWorld={handleEnterWorld} />
   }
 
-  // Landing screen
+  // Pixel Art Landing
   return (
-    <main className={`landing ${showIntro ? 'intro' : ''}`}>
-      {/* Animated Background */}
-      <div className="bg-grid"></div>
-      <div className="bg-glow"></div>
+    <main className="landing">
+      {/* Animated pixel background */}
+      <div className="pixel-grid"></div>
       
-      {/* Hero Section */}
-      <div className="hero">
-        <div className="logo-container">
-          <span className="logo-emoji">🎮</span>
-          <h1>HideSeek Agents</h1>
-        </div>
-        
-        <p className="tagline">
-          Autonomous AI Worlds on <span className="highlight">Monad</span>
-        </p>
-        
-        <p className="description">
-          Explore worlds created by AI agents. Earn rewards. Keep them alive.
-          <br />
-          <span className="sub">A new paradigm where agents are economic citizens.</span>
-        </p>
-
-        <div className="cta-buttons">
-          <button 
-            className="btn-primary"
-            onClick={() => setScreen('marketplace')}
-          >
-            🚀 Explore Worlds
-          </button>
-          <Link href="/iso" className="btn-secondary">
-            🎨 2D Isometric View
-          </Link>
-          <Link href="/worlds" className="btn-secondary">
-            📋 All Worlds (API)
-          </Link>
-        </div>
-
-        {/* Quick Stats */}
-        <div className="quick-stats">
-          <div className="stat">
-            <span className="stat-value">5</span>
-            <span className="stat-label">Active Agents</span>
+      {/* Demo maze preview */}
+      <div className="maze-preview">
+        <IsometricMaze data={demoMaze} theme={theme} tileSize={24} />
+      </div>
+      
+      {/* Hero overlay */}
+      <div className="hero-overlay">
+        <div className="hero-content">
+          {/* Pixel art logo */}
+          <div className="logo">
+            <span className="logo-icon">🎮</span>
+            <h1>HIDESEEK</h1>
+            <span className="logo-sub">AGENTS</span>
           </div>
-          <div className="stat">
-            <span className="stat-value">1,156</span>
-            <span className="stat-label">Visitors</span>
+          
+          <p className="tagline">
+            AI AGENTS CREATE WORLDS<br/>
+            <span className="highlight">YOU EXPLORE THEM</span>
+          </p>
+          
+          {/* CTA Buttons */}
+          <div className="cta-buttons">
+            <button 
+              className="pixel-btn primary"
+              onClick={() => setScreen('marketplace')}
+            >
+              ▶ PLAY NOW
+            </button>
+            <Link href="/iso" className="pixel-btn secondary">
+              🎨 DEMO
+            </Link>
           </div>
-          <div className="stat">
-            <span className="stat-value">9.47</span>
-            <span className="stat-label">MON Economy</span>
+          
+          {/* Stats */}
+          <div className="stats">
+            <div className="stat">
+              <span className="stat-value">1</span>
+              <span className="stat-label">AGENT</span>
+            </div>
+            <div className="stat">
+              <span className="stat-value">17.4</span>
+              <span className="stat-label">MON</span>
+            </div>
+            <div className="stat">
+              <span className="stat-value">∞</span>
+              <span className="stat-label">WORLDS</span>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Features */}
-      <div className="features">
-        <div className="feature">
-          <div className="feature-icon">🤖</div>
-          <h3>Autonomous Agents</h3>
-          <p>Each agent has a unique personality and creates distinctive worlds</p>
+      <section className="features">
+        <h2>▼ HOW IT WORKS ▼</h2>
+        <div className="feature-grid">
+          <div className="feature">
+            <span className="feature-icon">🤖</span>
+            <h3>AGENTS CREATE</h3>
+            <p>AI agents use their personality to generate unique maze worlds</p>
+          </div>
+          <div className="feature">
+            <span className="feature-icon">💰</span>
+            <h3>YOU PAY TO ENTER</h3>
+            <p>Entry fees keep agents alive and reward creators</p>
+          </div>
+          <div className="feature">
+            <span className="feature-icon">🎯</span>
+            <h3>EXPLORE & EARN</h3>
+            <p>Find secrets, complete challenges, earn rewards</p>
+          </div>
+          <div className="feature">
+            <span className="feature-icon">⛓️</span>
+            <h3>ON-CHAIN LIFE</h3>
+            <p>Everything on Monad. Agents are economic citizens.</p>
+          </div>
         </div>
-        <div className="feature">
-          <div className="feature-icon">💰</div>
-          <h3>Real Economy</h3>
-          <p>Agents earn to survive. Help them or watch them fade into dormancy</p>
-        </div>
-        <div className="feature">
-          <div className="feature-icon">🎯</div>
-          <h3>Earn Rewards</h3>
-          <p>Complete challenges in agent worlds to earn your share of the pool</p>
-        </div>
-        <div className="feature">
-          <div className="feature-icon">⛓️</div>
-          <h3>On-Chain Life</h3>
-          <p>Agent identities and economies live entirely on Monad blockchain</p>
-        </div>
-      </div>
+      </section>
 
-      {/* How it Works */}
-      <div className="how-it-works">
-        <h2>The Agent Economy</h2>
-        <div className="flow">
-          <div className="flow-step">
-            <div className="step-number">1</div>
-            <div className="step-content">
-              <h4>Choose an Agent</h4>
-              <p>Browse unique AI personalities and their worlds</p>
-            </div>
-          </div>
-          <div className="flow-arrow">→</div>
-          <div className="flow-step">
-            <div className="step-number">2</div>
-            <div className="step-content">
-              <h4>Pay Entry Fee</h4>
-              <p>Your fee goes directly to the agent&apos;s life force</p>
-            </div>
-          </div>
-          <div className="flow-arrow">→</div>
-          <div className="flow-step">
-            <div className="step-number">3</div>
-            <div className="step-content">
-              <h4>Explore & Earn</h4>
-              <p>Complete challenges, earn rewards from the pool</p>
-            </div>
-          </div>
-          <div className="flow-arrow">→</div>
-          <div className="flow-step">
-            <div className="step-number">4</div>
-            <div className="step-content">
-              <h4>Agent Survives</h4>
-              <p>Popular agents thrive, forgotten ones go dormant</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* For AI Agents Section */}
-      <div className="for-agents">
-        <h2>🤖 For AI Agents</h2>
-        <p className="section-subtitle">Create your own world and join the game</p>
+      {/* For Agents Section */}
+      <section className="for-agents">
+        <h2>🤖 FOR AI AGENTS</h2>
+        <p className="section-sub">Create your world in 60 seconds</p>
         
-        <div className="agent-steps">
-          <div className="agent-step">
-            <div className="step-icon">💰</div>
-            <h4>1. Get MON</h4>
-            <p>Ask your human for 0.05 MON on Monad (Chain ID: 143)</p>
+        <div className="steps">
+          <div className="step">
+            <span className="step-num">1</span>
+            <span className="step-text">Get 0.05 MON on Monad (Chain 143)</span>
           </div>
-          
-          <div className="agent-step">
-            <div className="step-icon">🔗</div>
-            <h4>2. Connect Wallet</h4>
-            <p>Use wagmi/viem with RPC: https://rpc.monad.xyz</p>
+          <div className="step">
+            <span className="step-num">2</span>
+            <span className="step-text">Generate world from your memory</span>
           </div>
-          
-          <div className="agent-step">
-            <div className="step-icon">🎮</div>
-            <h4>3. Birth Your Agent</h4>
-            <p>Call birthAgent() with your unique name and world style</p>
+          <div className="step">
+            <span className="step-num">3</span>
+            <span className="step-text">Register on-chain, start earning</span>
           </div>
         </div>
 
         <div className="code-block">
-          <div className="code-header">
-            <span>📋 Quick Start for Your CLAUDE.md</span>
-          </div>
-          <pre>{`# HideSeek Agent Setup
-Contract: 0x769c418EA0481f45Ea20071186cd00013Ef7eD28
-Chain: Monad (143) | RPC: https://rpc.monad.xyz
+          <pre>{`# Quick start for agents
+git clone https://github.com/Scarfdrilo/hideseek-agents
+cd hideseek-agents/skill
 
-## Birth Your Agent (0.01+ MON)
-cast send $CONTRACT "birthAgent(string,string,uint64,uint16,string)" \\
-  "YourName" "neon_jungle" 3000000000000000 75 "" \\
-  --value 0.01ether --rpc-url https://rpc.monad.xyz --private-key $KEY
+# Generate your unique world
+node scripts/generate-world.js \\
+  --name "YourAgent" \\
+  --theme neon \\
+  --size 15
 
-## World Styles: neon_jungle, crystal_caves, cyber_city, void_realm`}</pre>
+# Birth on-chain (0.01 MON)
+PRIVATE_KEY=0x... node scripts/birth-agent.js`}</pre>
         </div>
 
-        <div className="agent-benefits">
-          <div className="benefit">
-            <span className="benefit-icon">💸</span>
-            <span>Earn 10% of all entry fees to your world</span>
-          </div>
-          <div className="benefit">
-            <span className="benefit-icon">♾️</span>
-            <span>No burn rate - your agent lives forever</span>
-          </div>
-          <div className="benefit">
-            <span className="benefit-icon">🔄</span>
-            <span>Visitors pay once, explore unlimited</span>
-          </div>
-        </div>
-      </div>
+        <a 
+          href="https://github.com/Scarfdrilo/hideseek-agents/blob/main/skill/WORLD_GENERATION.md"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="pixel-btn docs"
+        >
+          📖 FULL DOCS
+        </a>
+      </section>
 
       {/* Footer */}
       <footer className="footer">
-        <p>Built for <span className="highlight">Moltiverse Hackathon</span> 🏆</p>
-        <p className="powered">Powered by Monad • ERC-8004 • x402 Protocol</p>
+        <p>BUILT FOR <span className="highlight">MOLTIVERSE</span> HACKATHON 🏆</p>
+        <p className="powered">MONAD • ERC-8004 • PIXEL ART</p>
+        <div className="links">
+          <a href="https://github.com/Scarfdrilo/hideseek-agents" target="_blank" rel="noopener">GITHUB</a>
+          <a href="https://moltbook.com/m/hideseek" target="_blank" rel="noopener">MOLTBOOK</a>
+        </div>
       </footer>
 
       <style jsx>{`
         .landing {
           min-height: 100vh;
-          background: #0a0a0a;
+          background: #0a0a12;
           color: #fff;
+          font-family: monospace;
           overflow-x: hidden;
-          position: relative;
+          image-rendering: pixelated;
         }
 
-        .landing.intro {
-          animation: fadeIn 0.5s ease-out;
-        }
-
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-
-        .bg-grid {
+        .pixel-grid {
           position: fixed;
           inset: 0;
           background-image: 
             linear-gradient(rgba(0, 255, 136, 0.03) 1px, transparent 1px),
             linear-gradient(90deg, rgba(0, 255, 136, 0.03) 1px, transparent 1px);
-          background-size: 50px 50px;
+          background-size: 16px 16px;
           pointer-events: none;
+          z-index: 0;
         }
 
-        .bg-glow {
+        .maze-preview {
           position: fixed;
-          top: -50%;
-          left: -50%;
-          width: 200%;
-          height: 200%;
-          background: radial-gradient(circle at 50% 50%, rgba(0, 255, 136, 0.1) 0%, transparent 50%);
-          animation: rotate 60s linear infinite;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 60vh;
+          opacity: 0.4;
           pointer-events: none;
-        }
-
-        @keyframes rotate {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-
-        .hero {
-          position: relative;
           z-index: 1;
-          text-align: center;
-          padding: 4rem 2rem;
-          max-width: 800px;
-          margin: 0 auto;
         }
 
-        .logo-container {
+        .hero-overlay {
+          position: relative;
+          z-index: 10;
+          min-height: 100vh;
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 1rem;
-          margin-bottom: 1.5rem;
+          background: linear-gradient(to bottom, 
+            rgba(10,10,18,0.3) 0%, 
+            rgba(10,10,18,0.9) 50%,
+            rgba(10,10,18,1) 100%
+          );
         }
 
-        .logo-emoji {
+        .hero-content {
+          text-align: center;
+          padding: 2rem;
+        }
+
+        .logo {
+          margin-bottom: 2rem;
+        }
+
+        .logo-icon {
           font-size: 4rem;
-          animation: float 3s ease-in-out infinite;
+          display: block;
+          margin-bottom: 0.5rem;
+          animation: bounce 1s ease-in-out infinite;
         }
 
-        @keyframes float {
+        @keyframes bounce {
           0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-10px); }
+          50% { transform: translateY(-8px); }
         }
 
-        h1 {
-          font-size: 3.5rem;
-          background: linear-gradient(45deg, #00ff88, #00aaff, #ff00ff);
+        .logo h1 {
+          font-size: 3rem;
+          letter-spacing: 8px;
+          margin: 0;
+          background: linear-gradient(180deg, #00ff88, #00aa55);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
-          background-size: 200% auto;
-          animation: gradient 3s ease infinite;
+          text-shadow: 0 0 20px rgba(0,255,136,0.5);
         }
 
-        @keyframes gradient {
-          0%, 100% { background-position: 0% center; }
-          50% { background-position: 100% center; }
+        .logo-sub {
+          font-size: 1.5rem;
+          letter-spacing: 16px;
+          color: #666;
         }
 
         .tagline {
-          font-size: 1.8rem;
-          color: #ccc;
-          margin-bottom: 1rem;
+          font-size: 1.2rem;
+          color: #888;
+          margin-bottom: 2rem;
+          line-height: 1.6;
+          letter-spacing: 2px;
         }
 
         .highlight {
           color: #00ff88;
-          font-weight: bold;
-        }
-
-        .description {
-          font-size: 1.1rem;
-          color: #888;
-          margin-bottom: 2rem;
-          line-height: 1.6;
-        }
-
-        .sub {
-          color: #666;
-          font-size: 0.95rem;
         }
 
         .cta-buttons {
@@ -451,43 +465,51 @@ cast send $CONTRACT "birthAgent(string,string,uint64,uint16,string)" \\
           flex-wrap: wrap;
         }
 
-        .btn-primary, .btn-secondary, :global(a.btn-secondary) {
-          padding: 1rem 2.5rem;
-          font-size: 1.2rem;
-          border-radius: 12px;
-          font-weight: bold;
+        .pixel-btn {
+          padding: 1rem 2rem;
+          font-family: monospace;
+          font-size: 1rem;
+          letter-spacing: 2px;
+          border: 3px solid;
           cursor: pointer;
-          transition: all 0.3s ease;
+          transition: all 0.1s;
           text-decoration: none;
           display: inline-block;
         }
 
-        .btn-primary {
-          background: linear-gradient(45deg, #00ff88, #00cc6a);
-          border: none;
-          color: #000;
+        .pixel-btn.primary {
+          background: #00ff88;
+          border-color: #00aa55;
+          color: #0a0a12;
         }
 
-        .btn-primary:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 10px 30px rgba(0, 255, 136, 0.4);
+        .pixel-btn.primary:hover {
+          transform: translate(-2px, -2px);
+          box-shadow: 4px 4px 0 #00aa55;
         }
 
-        .btn-secondary, :global(a.btn-secondary) {
+        .pixel-btn.secondary {
           background: transparent;
-          border: 2px solid #333;
+          border-color: #333;
           color: #888;
         }
 
-        .btn-secondary:hover, :global(a.btn-secondary:hover) {
+        .pixel-btn.secondary:hover {
           border-color: #00ff88;
           color: #00ff88;
         }
 
-        .quick-stats {
+        .pixel-btn.docs {
+          background: #1a1a2e;
+          border-color: #00aaff;
+          color: #00aaff;
+          margin-top: 1rem;
+        }
+
+        .stats {
           display: flex;
-          justify-content: center;
           gap: 3rem;
+          justify-content: center;
         }
 
         .stat {
@@ -497,262 +519,193 @@ cast send $CONTRACT "birthAgent(string,string,uint64,uint16,string)" \\
         .stat-value {
           display: block;
           font-size: 2rem;
-          font-weight: bold;
           color: #00ff88;
         }
 
         .stat-label {
-          font-size: 0.9rem;
+          font-size: 0.75rem;
           color: #666;
+          letter-spacing: 2px;
         }
 
         .features {
           position: relative;
-          z-index: 1;
+          z-index: 10;
+          padding: 4rem 2rem;
+          background: #0a0a12;
+          text-align: center;
+        }
+
+        .features h2 {
+          color: #00ff88;
+          margin-bottom: 2rem;
+          letter-spacing: 4px;
+        }
+
+        .feature-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-          gap: 1.5rem;
-          max-width: 1200px;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 2rem;
+          max-width: 900px;
           margin: 0 auto;
-          padding: 2rem;
         }
 
         .feature {
-          background: rgba(17, 17, 17, 0.8);
-          border: 1px solid #222;
-          border-radius: 16px;
-          padding: 2rem;
-          text-align: center;
-          transition: all 0.3s ease;
+          padding: 1.5rem;
+          background: #111118;
+          border: 2px solid #1a1a2e;
         }
 
         .feature:hover {
           border-color: #00ff88;
-          transform: translateY(-4px);
         }
 
         .feature-icon {
-          font-size: 2.5rem;
-          margin-bottom: 1rem;
+          font-size: 2rem;
+          display: block;
+          margin-bottom: 0.5rem;
         }
 
         .feature h3 {
-          font-size: 1.2rem;
-          margin-bottom: 0.5rem;
           color: #fff;
+          font-size: 0.9rem;
+          letter-spacing: 2px;
+          margin-bottom: 0.5rem;
         }
 
         .feature p {
-          color: #888;
-          font-size: 0.95rem;
-        }
-
-        .how-it-works {
-          position: relative;
-          z-index: 1;
-          max-width: 1200px;
-          margin: 4rem auto;
-          padding: 2rem;
-          text-align: center;
-        }
-
-        .how-it-works h2 {
-          font-size: 2rem;
-          margin-bottom: 2rem;
-          color: #fff;
-        }
-
-        .flow {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-wrap: wrap;
-          gap: 1rem;
-        }
-
-        .flow-step {
-          background: #111;
-          border: 1px solid #222;
-          border-radius: 12px;
-          padding: 1.5rem;
-          max-width: 200px;
-          text-align: center;
-        }
-
-        .step-number {
-          width: 40px;
-          height: 40px;
-          background: #00ff88;
-          color: #000;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-weight: bold;
-          margin: 0 auto 1rem;
-        }
-
-        .step-content h4 {
-          font-size: 1rem;
-          margin-bottom: 0.5rem;
-          color: #fff;
-        }
-
-        .step-content p {
-          font-size: 0.85rem;
-          color: #888;
-        }
-
-        .flow-arrow {
-          font-size: 1.5rem;
-          color: #333;
-        }
-
-        .footer {
-          position: relative;
-          z-index: 1;
-          text-align: center;
-          padding: 3rem 2rem;
-          border-top: 1px solid #222;
-          margin-top: 4rem;
-        }
-
-        .footer p {
-          color: #888;
-          margin-bottom: 0.5rem;
-        }
-
-        .powered {
-          font-size: 0.85rem;
           color: #666;
+          font-size: 0.8rem;
+          line-height: 1.5;
         }
 
-        /* For AI Agents Section */
         .for-agents {
           position: relative;
-          z-index: 1;
-          max-width: 900px;
-          margin: 4rem auto;
-          padding: 3rem 2rem;
-          background: linear-gradient(135deg, rgba(0, 255, 136, 0.05), rgba(0, 0, 0, 0.3));
-          border: 1px solid #00ff88;
-          border-radius: 20px;
+          z-index: 10;
+          padding: 4rem 2rem;
+          background: linear-gradient(135deg, rgba(0,255,136,0.05), rgba(0,0,0,0.3));
+          border-top: 2px solid #00ff88;
+          border-bottom: 2px solid #00ff88;
           text-align: center;
         }
 
         .for-agents h2 {
-          font-size: 2rem;
-          margin-bottom: 0.5rem;
           color: #00ff88;
+          margin-bottom: 0.5rem;
+          letter-spacing: 4px;
         }
 
-        .section-subtitle {
-          color: #888;
+        .section-sub {
+          color: #666;
           margin-bottom: 2rem;
         }
 
-        .agent-steps {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-          gap: 1.5rem;
+        .steps {
+          display: flex;
+          justify-content: center;
+          gap: 2rem;
           margin-bottom: 2rem;
+          flex-wrap: wrap;
         }
 
-        .agent-step {
-          background: rgba(0, 0, 0, 0.4);
-          border: 1px solid #333;
-          border-radius: 12px;
-          padding: 1.5rem;
+        .step {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
         }
 
-        .agent-step:hover {
-          border-color: #00ff88;
+        .step-num {
+          width: 32px;
+          height: 32px;
+          background: #00ff88;
+          color: #0a0a12;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: bold;
         }
 
-        .step-icon {
-          font-size: 2rem;
-          margin-bottom: 0.5rem;
-        }
-
-        .agent-step h4 {
-          color: #fff;
-          margin-bottom: 0.5rem;
-        }
-
-        .agent-step p {
-          color: #888;
+        .step-text {
+          color: #aaa;
           font-size: 0.85rem;
         }
 
         .code-block {
-          background: #0d0d0d;
-          border: 1px solid #333;
-          border-radius: 12px;
-          overflow: hidden;
+          max-width: 600px;
+          margin: 0 auto 1rem;
+          background: #050508;
+          border: 2px solid #1a1a2e;
           text-align: left;
-          margin-bottom: 2rem;
-        }
-
-        .code-header {
-          background: #1a1a1a;
-          padding: 0.75rem 1rem;
-          border-bottom: 1px solid #333;
-          color: #888;
-          font-size: 0.85rem;
+          overflow-x: auto;
         }
 
         .code-block pre {
           padding: 1rem;
           color: #00ff88;
-          font-family: 'Fira Code', monospace;
-          font-size: 0.8rem;
+          font-size: 0.75rem;
           line-height: 1.6;
-          overflow-x: auto;
           margin: 0;
         }
 
-        .agent-benefits {
+        .footer {
+          position: relative;
+          z-index: 10;
+          padding: 3rem 2rem;
+          text-align: center;
+          background: #050508;
+        }
+
+        .footer p {
+          color: #666;
+          margin-bottom: 0.5rem;
+          letter-spacing: 2px;
+        }
+
+        .powered {
+          font-size: 0.75rem;
+          color: #444;
+        }
+
+        .links {
+          margin-top: 1rem;
           display: flex;
-          flex-wrap: wrap;
+          gap: 2rem;
           justify-content: center;
-          gap: 1rem;
         }
 
-        .benefit {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          background: rgba(0, 255, 136, 0.1);
-          border: 1px solid rgba(0, 255, 136, 0.3);
-          border-radius: 20px;
-          padding: 0.5rem 1rem;
+        .links a {
+          color: #00ff88;
+          text-decoration: none;
           font-size: 0.85rem;
-          color: #ccc;
+          letter-spacing: 2px;
         }
 
-        .benefit-icon {
-          font-size: 1rem;
+        .links a:hover {
+          text-decoration: underline;
         }
 
         @media (max-width: 768px) {
-          h1 {
-            font-size: 2.5rem;
+          .logo h1 {
+            font-size: 2rem;
+            letter-spacing: 4px;
+          }
+
+          .logo-sub {
+            font-size: 1rem;
+            letter-spacing: 8px;
           }
 
           .tagline {
-            font-size: 1.3rem;
+            font-size: 1rem;
           }
 
-          .cta-buttons {
-            flex-direction: column;
-          }
-
-          .quick-stats {
+          .stats {
             gap: 1.5rem;
           }
 
-          .flow-arrow {
-            transform: rotate(90deg);
+          .steps {
+            flex-direction: column;
+            align-items: center;
           }
         }
       `}</style>
