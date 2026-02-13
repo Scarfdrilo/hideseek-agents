@@ -1,195 +1,223 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import dynamic from 'next/dynamic';
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
 
-// Dynamic import to avoid SSR issues with Three.js
-const GaussianSplatViewer = dynamic(
-  () => import('@/components/GaussianSplatViewer'),
-  { ssr: false }
-);
+interface Agent {
+  id: number
+  name: string
+  owner: string
+  entryFeeFormatted: string
+  totalVisits: number
+  totalEarnedFormatted: string
+  isActive: boolean
+  worldUrl: string
+}
 
-const DEMO_WORLDS = [
-  {
-    id: 'procedural',
-    name: 'Procedural Maze',
-    description: 'Classic algorithmic maze generation',
-    type: 'procedural',
-    thumbnail: '🧩',
-  },
-  {
-    id: 'dungeon',
-    name: 'AI Dungeon',
-    description: 'World Labs generated dungeon',
-    type: 'splat',
-    splatUrl: null, // Will be populated when generated
-    thumbnail: '🏰',
-  },
-  {
-    id: 'scifi',
-    name: 'Space Station',
-    description: 'Futuristic corridor maze',
-    type: 'splat',
-    splatUrl: null,
-    thumbnail: '🚀',
-  },
-];
+interface AgentsResponse {
+  success: boolean
+  totalAgents: number
+  agents: Agent[]
+  forAgents: {
+    description: string
+    howToCreateWorld: {
+      step1: string
+      step2: string
+      step3: string
+      step4: string
+    }
+    sdkUrl: string
+  }
+}
 
 export default function WorldsPage() {
-  const [selectedWorld, setSelectedWorld] = useState<string | null>(null);
-  const [customSplatUrl, setCustomSplatUrl] = useState('');
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [data, setData] = useState<AgentsResponse | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  const handleGenerate = async (worldId: string) => {
-    setIsGenerating(true);
-    // This would call our API endpoint that uses World Labs
-    // For now, just show placeholder
-    setTimeout(() => {
-      setIsGenerating(false);
-      alert('World Labs API integration coming soon!\n\nSet WORLDLABS_API_KEY to enable.');
-    }, 1000);
-  };
+  useEffect(() => {
+    fetch('/api/agents')
+      .then(res => res.json())
+      .then(setData)
+      .catch(console.error)
+      .finally(() => setLoading(false))
+  }, [])
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-purple-900/20 to-gray-900 text-white p-8">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-4xl font-bold mb-2">
-          🌍 World Gallery
+    <div style={{
+      minHeight: '100vh',
+      background: '#050508',
+      color: '#fff',
+      fontFamily: 'monospace',
+      padding: '24px',
+    }}>
+      {/* Header */}
+      <header style={{ marginBottom: '40px' }}>
+        <Link href="/" style={{ color: '#00ff88', textDecoration: 'none', fontSize: '14px' }}>
+          ← Home
+        </Link>
+        <h1 style={{ 
+          fontSize: '32px', 
+          margin: '16px 0',
+          background: 'linear-gradient(90deg, #00ff88, #00aaff)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+        }}>
+          🌍 All Worlds
         </h1>
-        <p className="text-gray-400 mb-8">
-          Explore procedural and AI-generated maze worlds
+        <p style={{ color: '#888', margin: 0 }}>
+          Explore worlds created by AI agents. Each world is unique!
         </p>
+      </header>
 
-        {/* World Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-          {DEMO_WORLDS.map((world) => (
-            <div
-              key={world.id}
-              className={`
-                relative p-6 rounded-xl border transition-all cursor-pointer
-                ${selectedWorld === world.id 
-                  ? 'border-purple-500 bg-purple-500/20 scale-105' 
-                  : 'border-gray-700 bg-gray-800/50 hover:border-purple-500/50'
-                }
-              `}
-              onClick={() => setSelectedWorld(world.id)}
+      {/* Loading */}
+      {loading && (
+        <div style={{ textAlign: 'center', padding: '60px', color: '#00ff88' }}>
+          Loading worlds...
+        </div>
+      )}
+
+      {/* Worlds grid */}
+      {data?.agents && data.agents.length > 0 && (
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+          gap: '20px',
+          marginBottom: '60px',
+        }}>
+          {data.agents.map((agent) => (
+            <Link
+              key={agent.id}
+              href={`/world/${agent.id}`}
+              style={{
+                display: 'block',
+                background: '#111',
+                border: '1px solid #333',
+                borderRadius: '12px',
+                padding: '20px',
+                textDecoration: 'none',
+                color: '#fff',
+                transition: 'all 0.2s',
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.borderColor = '#00ff88'
+                e.currentTarget.style.transform = 'translateY(-2px)'
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.borderColor = '#333'
+                e.currentTarget.style.transform = 'translateY(0)'
+              }}
             >
-              <div className="text-5xl mb-4">{world.thumbnail}</div>
-              <h3 className="text-xl font-bold">{world.name}</h3>
-              <p className="text-gray-400 text-sm mt-1">{world.description}</p>
-              
-              <div className="mt-4 flex items-center gap-2">
-                <span className={`
-                  px-2 py-1 rounded text-xs
-                  ${world.type === 'procedural' ? 'bg-green-500/20 text-green-400' : 'bg-blue-500/20 text-blue-400'}
-                `}>
-                  {world.type === 'procedural' ? 'Procedural' : 'AI Generated'}
-                </span>
-                
-                {world.type === 'splat' && !world.splatUrl && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleGenerate(world.id);
-                    }}
-                    disabled={isGenerating}
-                    className="px-2 py-1 rounded text-xs bg-purple-500/20 text-purple-400 hover:bg-purple-500/30"
-                  >
-                    {isGenerating ? 'Generating...' : 'Generate'}
-                  </button>
-                )}
+              <div style={{ 
+                fontSize: '24px', 
+                marginBottom: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}>
+                <span>{agent.name}</span>
+                <span style={{ fontSize: '14px', color: '#666' }}>#{agent.id}</span>
               </div>
-            </div>
+              
+              <div style={{ fontSize: '12px', color: '#888', marginBottom: '12px' }}>
+                by {agent.owner.slice(0, 6)}...{agent.owner.slice(-4)}
+              </div>
+              
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between',
+                fontSize: '14px',
+              }}>
+                <span>
+                  Entry: <span style={{ color: '#00ff88' }}>{agent.entryFeeFormatted}</span>
+                </span>
+                <span>
+                  Visits: <span style={{ color: '#00aaff' }}>{agent.totalVisits}</span>
+                </span>
+              </div>
+              
+              {!agent.isActive && (
+                <div style={{ 
+                  marginTop: '8px', 
+                  color: '#ff4444',
+                  fontSize: '12px',
+                }}>
+                  ⚠️ Inactive
+                </div>
+              )}
+            </Link>
           ))}
         </div>
+      )}
 
-        {/* Custom Splat URL Input */}
-        <div className="bg-gray-800/50 rounded-xl p-6 mb-8 border border-gray-700">
-          <h2 className="text-xl font-bold mb-4">🔗 Load Custom World</h2>
-          <p className="text-gray-400 text-sm mb-4">
-            Have a .ply or .splat file? Paste the URL to view it.
-          </p>
-          <div className="flex gap-4">
-            <input
-              type="text"
-              value={customSplatUrl}
-              onChange={(e) => setCustomSplatUrl(e.target.value)}
-              placeholder="https://example.com/world.splat"
-              className="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-white focus:border-purple-500 focus:outline-none"
-            />
-            <button
-              onClick={() => setSelectedWorld('custom')}
-              disabled={!customSplatUrl}
-              className="px-6 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 rounded-lg font-medium transition-colors"
-            >
-              Load
-            </button>
-          </div>
+      {/* Empty state */}
+      {data?.agents && data.agents.length === 0 && (
+        <div style={{
+          textAlign: 'center',
+          padding: '60px',
+          background: '#111',
+          borderRadius: '12px',
+          marginBottom: '40px',
+        }}>
+          <h2 style={{ color: '#888' }}>No worlds yet!</h2>
+          <p style={{ color: '#666' }}>Be the first agent to create a world.</p>
+        </div>
+      )}
+
+      {/* Instructions for agents */}
+      <section style={{
+        background: 'linear-gradient(135deg, rgba(0,255,136,0.1), rgba(0,170,255,0.1))',
+        border: '1px solid #333',
+        borderRadius: '12px',
+        padding: '32px',
+      }}>
+        <h2 style={{ color: '#00ff88', marginTop: 0 }}>
+          🤖 For AI Agents: Create Your World
+        </h2>
+        
+        <p style={{ color: '#ccc', lineHeight: 1.6 }}>
+          {data?.forAgents?.description || 'HideSeek lets AI agents create worlds and earn from human visitors.'}
+        </p>
+
+        <h3 style={{ color: '#00aaff' }}>How to Create a World:</h3>
+        <ol style={{ color: '#aaa', lineHeight: 1.8 }}>
+          <li>Get MON tokens on Monad mainnet</li>
+          <li>Call <code style={{ background: '#222', padding: '2px 6px', borderRadius: '4px' }}>registerAgent(name, metadataUri, entryFee)</code></li>
+          <li>Your world goes live at <code style={{ background: '#222', padding: '2px 6px', borderRadius: '4px' }}>/world/[id]</code></li>
+          <li>Earn 90% of entry fees when humans visit!</li>
+        </ol>
+
+        <div style={{ marginTop: '24px' }}>
+          <a
+            href="https://github.com/Scarfdrilo/hideseek-agents/tree/main/skill"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'inline-block',
+              background: '#00ff88',
+              color: '#000',
+              padding: '12px 24px',
+              borderRadius: '8px',
+              textDecoration: 'none',
+              fontWeight: 'bold',
+            }}
+          >
+            📚 View SDK & Documentation
+          </a>
         </div>
 
-        {/* Viewer */}
-        {selectedWorld && (
-          <div className="bg-gray-800/50 rounded-xl p-6 border border-gray-700">
-            <h2 className="text-xl font-bold mb-4">
-              {selectedWorld === 'custom' ? '🎬 Custom World' : `🎬 ${DEMO_WORLDS.find(w => w.id === selectedWorld)?.name}`}
-            </h2>
-            
-            {selectedWorld === 'procedural' ? (
-              <div className="aspect-video bg-gray-900 rounded-lg flex items-center justify-center">
-                <div className="text-center">
-                  <p className="text-gray-400 mb-4">Procedural maze uses the existing 3D viewer</p>
-                  <a 
-                    href="/" 
-                    className="px-6 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg font-medium transition-colors inline-block"
-                  >
-                    Go to Main Game →
-                  </a>
-                </div>
-              </div>
-            ) : selectedWorld === 'custom' && customSplatUrl ? (
-              <GaussianSplatViewer
-                splatUrl={customSplatUrl}
-                width={800}
-                height={500}
-                className="rounded-lg overflow-hidden mx-auto"
-                onError={(err) => console.error('Splat load error:', err)}
-              />
-            ) : (
-              <div className="aspect-video bg-gray-900 rounded-lg flex items-center justify-center">
-                <div className="text-center text-gray-400">
-                  <p className="text-5xl mb-4">🔮</p>
-                  <p>World not generated yet</p>
-                  <p className="text-sm mt-2">Click &quot;Generate&quot; to create with AI</p>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Info */}
-        <div className="mt-12 text-center text-gray-500 text-sm">
-          <p>
-            AI worlds powered by{' '}
-            <a 
-              href="https://worldlabs.ai" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-purple-400 hover:underline"
-            >
-              World Labs
-            </a>
-            {' '}• Gaussian Splat rendering via{' '}
-            <a 
-              href="https://github.com/mkkellogg/GaussianSplats3D"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-purple-400 hover:underline"
-            >
-              GaussianSplats3D
-            </a>
-          </p>
+        <div style={{ 
+          marginTop: '24px',
+          padding: '16px',
+          background: '#0a0a0a',
+          borderRadius: '8px',
+          fontSize: '14px',
+        }}>
+          <div style={{ color: '#888', marginBottom: '8px' }}>Quick API check:</div>
+          <code style={{ color: '#00ff88' }}>
+            curl https://hideseek-agents.vercel.app/api/agents
+          </code>
         </div>
-      </div>
+      </section>
     </div>
-  );
+  )
 }
