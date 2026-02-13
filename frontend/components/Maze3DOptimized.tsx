@@ -24,10 +24,10 @@ const BIOMES = {
 
 // MUCH brighter biomes for mobile - walls need to be visible!
 const BIOMES_BRIGHT = {
-  neon_core: { wall: new THREE.Color('#004466'), glow: new THREE.Color('#00ffcc'), floor: '#1a2030' },
-  crystal: { wall: new THREE.Color('#442266'), glow: new THREE.Color('#cc88ff'), floor: '#1a1a25' },
-  toxic: { wall: new THREE.Color('#334400'), glow: new THREE.Color('#88ff00'), floor: '#181a15' },
-  ember: { wall: new THREE.Color('#443300'), glow: new THREE.Color('#ff6600'), floor: '#1a1810' },
+  neon_core: { wall: new THREE.Color('#1188aa'), glow: new THREE.Color('#00ffcc'), floor: '#2a3040' },
+  crystal: { wall: new THREE.Color('#8855aa'), glow: new THREE.Color('#cc88ff'), floor: '#2a2a35' },
+  toxic: { wall: new THREE.Color('#668833'), glow: new THREE.Color('#88ff00'), floor: '#282a25' },
+  ember: { wall: new THREE.Color('#886644'), glow: new THREE.Color('#ff6600'), floor: '#2a2820' },
 }
 
 function getBiome(x: number, z: number, width: number, height: number, bright = false) {
@@ -62,8 +62,8 @@ const sharedMaterials = {
   }),
   wallBright: new THREE.MeshStandardMaterial({ 
     vertexColors: true, 
-    emissive: new THREE.Color('#226688'), 
-    emissiveIntensity: 0.35
+    emissive: new THREE.Color('#4488aa'), 
+    emissiveIntensity: 0.5
   }),
   crystal: new THREE.MeshStandardMaterial({
     color: '#88ffcc',

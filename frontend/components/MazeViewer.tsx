@@ -252,7 +252,7 @@ export default function MazeViewer() {
   const effectiveQuality = quality === 'auto' ? (isMobile ? 'low' : 'high') : quality
   const useFog = effectiveQuality === 'high'
   const lightIntensity = effectiveQuality === 'high' ? 0.5 : 0.6
-  const ambientIntensity = effectiveQuality === 'high' ? 0.35 : 0.8  // MUCH brighter on mobile
+  const ambientIntensity = effectiveQuality === 'high' ? 0.35 : 1.2  // MUCH brighter on mobile
   const bgColor = effectiveQuality === 'high' ? '#050508' : '#151825'  // Lighter bg on mobile
 
   return (
