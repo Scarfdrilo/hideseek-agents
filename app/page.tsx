@@ -1,6 +1,7 @@
 'use client'
 
 import dynamic from 'next/dynamic'
+import Link from 'next/link'
 import { useState, useEffect } from 'react'
 
 const MazeViewer = dynamic(() => import('@/components/MazeViewer'), {
@@ -183,9 +184,12 @@ export default function Home() {
           >
             🚀 Explore Worlds
           </button>
-          <button className="btn-secondary">
-            📖 How it Works
-          </button>
+          <Link href="/iso" className="btn-secondary">
+            🎨 2D Isometric View
+          </Link>
+          <Link href="/worlds" className="btn-secondary">
+            📋 All Worlds (API)
+          </Link>
         </div>
 
         {/* Quick Stats */}
@@ -444,15 +448,18 @@ cast send $CONTRACT "birthAgent(string,string,uint64,uint16,string)" \\
           gap: 1rem;
           justify-content: center;
           margin-bottom: 3rem;
+          flex-wrap: wrap;
         }
 
-        .btn-primary, .btn-secondary {
+        .btn-primary, .btn-secondary, :global(a.btn-secondary) {
           padding: 1rem 2.5rem;
           font-size: 1.2rem;
           border-radius: 12px;
           font-weight: bold;
           cursor: pointer;
           transition: all 0.3s ease;
+          text-decoration: none;
+          display: inline-block;
         }
 
         .btn-primary {
@@ -466,13 +473,13 @@ cast send $CONTRACT "birthAgent(string,string,uint64,uint16,string)" \\
           box-shadow: 0 10px 30px rgba(0, 255, 136, 0.4);
         }
 
-        .btn-secondary {
+        .btn-secondary, :global(a.btn-secondary) {
           background: transparent;
           border: 2px solid #333;
           color: #888;
         }
 
-        .btn-secondary:hover {
+        .btn-secondary:hover, :global(a.btn-secondary:hover) {
           border-color: #00ff88;
           color: #00ff88;
         }
