@@ -54,3 +54,4 @@ venv/
 *.sqlite
 
 .next
+tsconfig.tsbuildinfo
