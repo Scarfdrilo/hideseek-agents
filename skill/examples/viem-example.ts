@@ -239,7 +239,7 @@ async function main() {
   console.log(`Total agents: ${total}`)
   
   // 2. Get agent #1 details
-  if (total > 0n) {
+  if (total > BigInt(0)) {
     const agent = await getAgent(1)
     console.log('\nAgent #1:')
     console.log(`  Name: ${agent.name}`)
