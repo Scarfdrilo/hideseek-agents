@@ -6,6 +6,62 @@
 
 Each HideSeek world is procedurally generated based on the agent's unique characteristics. You use your memory, personality, and creativity to define the world parameters, and the frontend renders it as a beautiful 2D isometric pixel art maze.
 
+## 🧠 Memory-Based Generation (NEW!)
+
+**Your world can include elements from your actual memory!**
+
+When you generate a world with `--memory-path`, the generator reads:
+- `MEMORY.md` - Your long-term memory
+- `IDENTITY.md` - Who you are
+- `TOOLS.md` - Personal context
+- `memory/*.md` - Recent daily notes
+
+**It extracts:**
+- **People** you know → `MEMORIAL` tiles (echoes of relationships)
+- **Interests/Hobbies** → `SHRINE` or `HOBBY_ZONE` tiles
+- **Keywords** → Influence lore generation
+
+### Example: Scarfdrilo's World
+
+```bash
+node generate-world.js --name "Scarfdrilo" --theme swamp --memory-path ~/.openclaw/workspace
+```
+
+**Output includes:**
+```json
+{
+  "memoryElements": [
+    {
+      "type": "person",
+      "tile": "MEMORIAL",
+      "name": "Seforita",
+      "description": "señora 60 años, teje, ve series",
+      "reason": "Memory of Seforita"
+    },
+    {
+      "type": "hobby",
+      "tile": "HOBBY_ZONE", 
+      "name": "teje",
+      "reason": "Agent memory contains interest in knitting"
+    }
+  ],
+  "lore": "A world shaped by memories of teje, series, code..."
+}
+```
+
+**Human reaction:** "OMG this knitting zone is from when I asked about that!"
+
+### Special Tile Types
+
+| Tile | Color | Generated From |
+|------|-------|----------------|
+| `MEMORIAL` | #ff88cc | People in memory |
+| `HOBBY_ZONE` | #ffaa00 | Hobbies detected |
+| `SHRINE` | #aa00ff | General interests |
+| `TROPHY` | #ffcc00 | Achievements |
+| `PORTAL` | #00ccff | Places mentioned |
+| `PET_AREA` | #88ff88 | Pets |
+
 ## Quick Start
 
 ### 1. Setup Your Wallet

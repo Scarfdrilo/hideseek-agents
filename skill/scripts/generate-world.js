@@ -2,16 +2,21 @@
 /**
  * HideSeek World Generator
  * 
- * Generates unique 2D isometric maze worlds based on agent personality.
+ * Generates unique 2D isometric maze worlds based on agent personality AND MEMORY.
  * 
  * Usage:
  *   node generate-world.js --name "AgentName" --theme neon --size 15
  *   
- * Or with personality JSON:
+ * With personality JSON:
  *   node generate-world.js --personality '{"traits":["cyberpunk","tech"]}'
+ *
+ * With memory directory (reads MEMORY.md + memory/*.md):
+ *   node generate-world.js --memory-path ~/.openclaw/workspace --name "Scarfdrilo"
  */
 
 const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
 
 // Theme color palettes
 const THEMES = {
@@ -62,7 +67,29 @@ const THEMES = {
     hiding: '#44ffff',
     glow: '#ff88ff',
     bg: '#220022'
+  },
+  swamp: {
+    wall: '#1a3d2e',
+    wallTop: '#2a5d3e',
+    wallSide: '#0a2d1e',
+    floor: '#0d1f15',
+    floorAlt: '#0f2518',
+    start: '#00ff66',
+    exit: '#ff4400',
+    hiding: '#00aacc',
+    glow: '#33ff99',
+    bg: '#050a08'
   }
+};
+
+// Special element types that can be generated from memory
+const MEMORY_ELEMENT_TYPES = {
+  hobby: { tile: 'HOBBY_ZONE', color: '#ffaa00' },
+  person: { tile: 'MEMORIAL', color: '#ff88cc' },
+  place: { tile: 'PORTAL', color: '#00ccff' },
+  interest: { tile: 'SHRINE', color: '#aa00ff' },
+  achievement: { tile: 'TROPHY', color: '#ffcc00' },
+  pet: { tile: 'PET_AREA', color: '#88ff88' }
 };
 
 // Seeded random for reproducibility
@@ -72,6 +99,210 @@ function seededRandom(seed) {
     s = (s * 1103515245 + 12345) & 0x7fffffff;
     return s / 0x7fffffff;
   };
+}
+
+/**
+ * Read agent memory files and extract meaningful content
+ */
+function readAgentMemory(memoryPath) {
+  const memory = {
+    raw: '',
+    facts: [],
+    people: [],
+    interests: [],
+    achievements: [],
+    keywords: []
+  };
+
+  try {
+    // Read MEMORY.md
+    const memoryMdPath = path.join(memoryPath, 'MEMORY.md');
+    if (fs.existsSync(memoryMdPath)) {
+      memory.raw += fs.readFileSync(memoryMdPath, 'utf8') + '\n';
+    }
+
+    // Read IDENTITY.md
+    const identityPath = path.join(memoryPath, 'IDENTITY.md');
+    if (fs.existsSync(identityPath)) {
+      memory.raw += fs.readFileSync(identityPath, 'utf8') + '\n';
+    }
+
+    // Read TOOLS.md for personal context
+    const toolsPath = path.join(memoryPath, 'TOOLS.md');
+    if (fs.existsSync(toolsPath)) {
+      memory.raw += fs.readFileSync(toolsPath, 'utf8') + '\n';
+    }
+
+    // Read memory/*.md files (recent daily notes)
+    const memoryDir = path.join(memoryPath, 'memory');
+    if (fs.existsSync(memoryDir)) {
+      const files = fs.readdirSync(memoryDir)
+        .filter(f => f.endsWith('.md'))
+        .sort()
+        .slice(-7); // Last 7 days
+      
+      for (const file of files) {
+        memory.raw += fs.readFileSync(path.join(memoryDir, file), 'utf8') + '\n';
+      }
+    }
+  } catch (err) {
+    console.error('Error reading memory:', err.message);
+  }
+
+  // Extract meaningful data from raw memory
+  if (memory.raw) {
+    memory.facts = extractFacts(memory.raw);
+    memory.people = extractPeople(memory.raw);
+    memory.interests = extractInterests(memory.raw);
+    memory.keywords = extractKeywords(memory.raw);
+  }
+
+  return memory;
+}
+
+/**
+ * Extract facts from memory text
+ */
+function extractFacts(text) {
+  const facts = [];
+  const lines = text.split('\n');
+  
+  for (const line of lines) {
+    // Look for lines with specific patterns
+    if (line.includes(':') && !line.startsWith('#')) {
+      const match = line.match(/[-*]\s*\*\*([^*]+)\*\*[:\s]+(.+)/);
+      if (match) {
+        facts.push({ key: match[1].trim(), value: match[2].trim() });
+      }
+    }
+  }
+  
+  return facts;
+}
+
+/**
+ * Extract people/contacts from memory
+ */
+function extractPeople(text) {
+  const people = [];
+  
+  // Match patterns like "Name - description" or "Name: description"
+  const patterns = [
+    /[-*]\s*([A-Z][a-záéíóúñ]+(?:\s+[A-Z]?[a-záéíóúñ]+)?)\s*[-:]\s*([^,\n]+)/gi,
+    /\*\*([A-Z][a-záéíóúñ]+)\*\*\s*[-=:]\s*([^\n]+)/gi
+  ];
+  
+  for (const pattern of patterns) {
+    let match;
+    while ((match = pattern.exec(text)) !== null) {
+      const name = match[1].trim();
+      // Filter out common non-name words
+      if (!['Status', 'Balance', 'Contract', 'GitHub', 'Name', 'Track', 'API'].includes(name)) {
+        people.push({
+          name,
+          description: match[2].trim().substring(0, 100)
+        });
+      }
+    }
+  }
+  
+  return people.slice(0, 5); // Max 5 people
+}
+
+/**
+ * Extract interests/hobbies from memory
+ */
+function extractInterests(text) {
+  const interests = [];
+  const interestKeywords = [
+    'teje', 'knit', 'crochet', 'tejer',
+    'series', 'movies', 'películas',
+    'code', 'coding', 'programación', 'código',
+    'games', 'gaming', 'juegos',
+    'music', 'música',
+    'art', 'arte', 'dibujo',
+    'sports', 'deportes',
+    'crypto', 'blockchain', 'web3',
+    'ai', 'artificial intelligence',
+    'cooking', 'cocina',
+    'reading', 'lectura', 'libros',
+    'travel', 'viaje',
+    'photography', 'fotografía',
+    'temu', 'shopping', 'compras'
+  ];
+  
+  const lowerText = text.toLowerCase();
+  
+  for (const keyword of interestKeywords) {
+    if (lowerText.includes(keyword)) {
+      interests.push(keyword);
+    }
+  }
+  
+  return [...new Set(interests)]; // Unique
+}
+
+/**
+ * Extract significant keywords from memory
+ */
+function extractKeywords(text) {
+  const words = text.toLowerCase()
+    .replace(/[#*\[\](){}]/g, ' ')
+    .split(/\s+/)
+    .filter(w => w.length > 4);
+  
+  const counts = {};
+  for (const word of words) {
+    if (!/^[0-9x]+$/.test(word) && !/^https?/.test(word)) {
+      counts[word] = (counts[word] || 0) + 1;
+    }
+  }
+  
+  return Object.entries(counts)
+    .filter(([_, count]) => count >= 2)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 20)
+    .map(([word]) => word);
+}
+
+/**
+ * Generate special elements from memory
+ */
+function generateMemoryElements(memory, seed) {
+  const elements = [];
+  const random = seededRandom(seed + 2000);
+  
+  // Add elements for people in memory
+  for (const person of memory.people.slice(0, 3)) {
+    elements.push({
+      type: 'person',
+      tile: 'MEMORIAL',
+      name: person.name,
+      description: person.description,
+      reason: `Memory of ${person.name}`,
+      color: '#ff88cc'
+    });
+  }
+  
+  // Add elements for interests
+  for (const interest of memory.interests.slice(0, 3)) {
+    const elementType = interest.includes('teje') || interest.includes('knit') 
+      ? 'hobby' 
+      : interest.includes('game') || interest.includes('juego')
+      ? 'achievement'
+      : 'interest';
+    
+    elements.push({
+      type: elementType,
+      tile: MEMORY_ELEMENT_TYPES[elementType].tile,
+      name: interest,
+      description: `Zone inspired by: ${interest}`,
+      reason: `Agent memory contains interest in "${interest}"`,
+      color: MEMORY_ELEMENT_TYPES[elementType].color
+    });
+  }
+  
+  return elements;
 }
 
 // Generate maze using DFS
@@ -148,7 +379,7 @@ function generateMaze(size, seed, complexity = 0.6) {
 }
 
 // Place special tiles
-function placeSpecialTiles(maze, seed, hidingSpotCount = 3) {
+function placeSpecialTiles(maze, seed, hidingSpotCount = 3, memoryElements = []) {
   const random = seededRandom(seed + 1000);
   const size = maze.length;
   const floors = [];
@@ -194,7 +425,7 @@ function placeSpecialTiles(maze, seed, hidingSpotCount = 3) {
   
   // Place hiding spots
   const hidingSpots = [];
-  const availableFloors = floors.filter(
+  let availableFloors = floors.filter(
     f => maze[f.y][f.x] === 'FLOOR'
   );
   
@@ -205,10 +436,27 @@ function placeSpecialTiles(maze, seed, hidingSpotCount = 3) {
     hidingSpots.push(spot);
   }
   
+  // Place memory-based elements
+  const placedElements = [];
+  availableFloors = floors.filter(f => maze[f.y][f.x] === 'FLOOR');
+  
+  for (const element of memoryElements) {
+    if (availableFloors.length === 0) break;
+    
+    const idx = Math.floor(random() * availableFloors.length);
+    const spot = availableFloors.splice(idx, 1)[0];
+    maze[spot.y][spot.x] = element.tile;
+    placedElements.push({
+      ...element,
+      position: { x: spot.x, y: spot.y }
+    });
+  }
+  
   return {
     start: startPos,
     exit: exitPos,
-    hidingSpots
+    hidingSpots,
+    memoryElements: placedElements
   };
 }
 
@@ -222,7 +470,8 @@ function generateWorld(params) {
     hidingSpots = 3,
     seed = Date.now(),
     colors = null,
-    lore = ''
+    lore = '',
+    memoryPath = null
   } = params;
   
   // Clamp values to constraints
@@ -230,12 +479,31 @@ function generateWorld(params) {
   const clampedComplexity = Math.min(0.9, Math.max(0.3, complexity));
   const clampedHidingSpots = Math.min(5, Math.max(1, hidingSpots));
   
+  // Read agent memory if path provided
+  let memory = { raw: '', facts: [], people: [], interests: [], keywords: [] };
+  let memoryElements = [];
+  
+  if (memoryPath) {
+    memory = readAgentMemory(memoryPath);
+    memoryElements = generateMemoryElements(memory, seed);
+    console.error(`[Memory] Found ${memory.people.length} people, ${memory.interests.length} interests`);
+    console.error(`[Memory] Generated ${memoryElements.length} special elements`);
+  }
+  
   // Generate maze
   const maze = generateMaze(clampedSize, seed, clampedComplexity);
-  const specialTiles = placeSpecialTiles(maze, seed, clampedHidingSpots);
+  const specialTiles = placeSpecialTiles(maze, seed, clampedHidingSpots, memoryElements);
   
   // Get colors
   const themeColors = colors || THEMES[theme] || THEMES.neon;
+  
+  // Generate lore from memory if not provided
+  let finalLore = lore;
+  if (!lore && memory.raw) {
+    const interests = memory.interests.slice(0, 3).join(', ');
+    const people = memory.people.slice(0, 2).map(p => p.name).join(' & ');
+    finalLore = `A world shaped by memories${interests ? ` of ${interests}` : ''}${people ? `, with echoes of ${people}` : ''}...`;
+  }
   
   return {
     name,
@@ -247,8 +515,14 @@ function generateWorld(params) {
     start: specialTiles.start,
     exit: specialTiles.exit,
     hidingSpots: specialTiles.hidingSpots,
+    memoryElements: specialTiles.memoryElements,
     colors: themeColors,
-    lore,
+    lore: finalLore,
+    memoryStats: {
+      peopleCount: memory.people.length,
+      interestsCount: memory.interests.length,
+      keywordsFound: memory.keywords.slice(0, 10)
+    },
     generatedAt: new Date().toISOString()
   };
 }
@@ -259,8 +533,14 @@ if (require.main === module) {
   const params = {};
   
   for (let i = 0; i < args.length; i += 2) {
-    const key = args[i].replace('--', '');
+    const key = args[i].replace('--', '').replace(/-/g, '');
     let value = args[i + 1];
+    
+    // Handle memorypath -> memoryPath
+    const keyMap = {
+      'memorypath': 'memoryPath'
+    };
+    const normalizedKey = keyMap[key.toLowerCase()] || key;
     
     // Parse JSON values
     if (value?.startsWith('{') || value?.startsWith('[')) {
@@ -270,11 +550,11 @@ if (require.main === module) {
     }
     
     // Parse numbers
-    if (!isNaN(value) && value !== '') {
+    if (!isNaN(value) && value !== '' && normalizedKey !== 'memoryPath') {
       value = Number(value);
     }
     
-    params[key] = value;
+    params[normalizedKey] = value;
   }
   
   // If personality provided, derive theme from traits
@@ -291,6 +571,8 @@ if (require.main === module) {
       params.theme = params.theme || 'dungeon';
     } else if (p.traits?.includes('fun') || p.traits?.includes('playful')) {
       params.theme = params.theme || 'candy';
+    } else if (p.traits?.includes('swamp') || p.traits?.includes('crocodile')) {
+      params.theme = params.theme || 'swamp';
     }
   }
   
@@ -298,4 +580,4 @@ if (require.main === module) {
   console.log(JSON.stringify(world, null, 2));
 }
 
-module.exports = { generateWorld, generateMaze, THEMES };
+module.exports = { generateWorld, generateMaze, readAgentMemory, THEMES, MEMORY_ELEMENT_TYPES };
