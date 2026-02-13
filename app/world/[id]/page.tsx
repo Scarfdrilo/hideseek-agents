@@ -127,22 +127,48 @@ function getThemeFromId(id: number): 'neon' | 'forest' | 'dungeon' | 'candy' {
   return themes[id % themes.length]
 }
 
+// Pre-defined agent worlds (loaded from static JSON)
+const KNOWN_AGENTS = ['scarfdrilo']
+
 export default function WorldPage() {
   const params = useParams()
   const id = params.id as string
-  const agentId = parseInt(id, 10)
+  const isNamedWorld = KNOWN_AGENTS.includes(id.toLowerCase())
+  const agentId = isNamedWorld ? 0 : parseInt(id, 10)
   
   const [agent, setAgent] = useState<AgentData | null>(null)
+  const [worldData, setWorldData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   
-  // Generate maze based on agent ID (deterministic)
-  const mazeData = generateMaze(agentId * 12345)
-  const theme = getThemeFromId(agentId)
+  // Default maze (used if no custom world loaded)
+  const defaultMazeData = generateMaze(agentId * 12345)
+  const defaultTheme = getThemeFromId(agentId)
 
   useEffect(() => {
-    const fetchAgent = async () => {
+    const fetchData = async () => {
       try {
+        // Try to load pre-generated world JSON first
+        if (isNamedWorld) {
+          const worldRes = await fetch(`/worlds/${id.toLowerCase()}.json`)
+          if (worldRes.ok) {
+            const data = await worldRes.json()
+            setWorldData(data)
+            setAgent({
+              id: 0,
+              owner: '0x8B619C935Bc52E568db4192c02a6b8295bC772C6',
+              name: data.name,
+              entryFeeFormatted: '0.003 MON',
+              totalVisits: 0,
+              totalEarnedFormatted: '0 MON',
+              isActive: true,
+            })
+            setLoading(false)
+            return
+          }
+        }
+        
+        // Fallback to API for on-chain agents
         const res = await fetch('/api/agents')
         const data = await res.json()
         
@@ -164,8 +190,22 @@ export default function WorldPage() {
       }
     }
     
-    if (agentId) fetchAgent()
-  }, [agentId])
+    fetchData()
+  }, [id, agentId, isNamedWorld])
+  
+  // Use loaded world data or fall back to generated maze
+  const mazeData = worldData ? {
+    maze: worldData.maze,
+    width: worldData.width || worldData.size,
+    height: worldData.height || worldData.size,
+    hidingSpots: worldData.hidingSpots || [],
+    start: worldData.start,
+    memoryElements: worldData.memoryElements,
+    citizens: worldData.citizens,
+    lore: worldData.lore,
+  } : defaultMazeData
+  
+  const theme = (worldData?.theme as 'neon' | 'forest' | 'dungeon' | 'candy' | 'swamp') || defaultTheme
 
   return (
     <div style={{ 
@@ -230,22 +270,58 @@ export default function WorldPage() {
           position: 'fixed',
           bottom: '20px',
           right: '20px',
-          background: 'rgba(0,0,0,0.8)',
+          background: 'rgba(0,0,0,0.9)',
           border: '1px solid #333',
           borderRadius: '8px',
           padding: '16px',
-          maxWidth: '300px',
+          maxWidth: '320px',
         }}>
           <h3 style={{ margin: '0 0 8px 0', color: '#00ff88' }}>
-            Created by Agent #{agent.id}
+            🐊 {agent.name}&apos;s World
           </h3>
+          
+          {worldData?.lore && (
+            <p style={{ 
+              margin: '8px 0', 
+              fontSize: '13px', 
+              color: '#aaa',
+              fontStyle: 'italic',
+              borderLeft: '2px solid #00ff88',
+              paddingLeft: '8px',
+            }}>
+              &quot;{worldData.lore}&quot;
+            </p>
+          )}
+          
           <p style={{ margin: '4px 0', fontSize: '12px', color: '#888' }}>
             Owner: {agent.owner.slice(0, 6)}...{agent.owner.slice(-4)}
           </p>
           <p style={{ margin: '4px 0', fontSize: '12px', color: '#888' }}>
-            Theme: {theme}
+            Theme: <span style={{ color: theme === 'swamp' ? '#33ff99' : '#00ff88' }}>{theme}</span>
           </p>
-          <p style={{ margin: '8px 0 0 0', fontSize: '11px', color: '#666' }}>
+          
+          {worldData?.memoryElements && worldData.memoryElements.length > 0 && (
+            <div style={{ marginTop: '12px', borderTop: '1px solid #333', paddingTop: '8px' }}>
+              <p style={{ margin: '0 0 4px 0', fontSize: '11px', color: '#666', textTransform: 'uppercase' }}>
+                Memory Elements:
+              </p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                {worldData.memoryElements.slice(0, 5).map((el: any, i: number) => (
+                  <span key={i} style={{
+                    fontSize: '10px',
+                    padding: '2px 6px',
+                    background: el.color || '#333',
+                    borderRadius: '4px',
+                    color: '#000',
+                  }}>
+                    {el.name}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          <p style={{ margin: '12px 0 0 0', fontSize: '11px', color: '#666' }}>
             Use WASD to move around the maze
           </p>
         </div>
