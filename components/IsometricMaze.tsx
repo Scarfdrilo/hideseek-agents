@@ -3,18 +3,30 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { Application, Graphics, Container, Text, TextStyle } from 'pixi.js'
 
+interface MemoryElement {
+  type: string
+  tile: string
+  name: string
+  description?: string
+  position?: { x: number; y: number }
+}
+
 interface MazeData {
   maze: string[][]
   width: number
   height: number
   hidingSpots: { x: number; y: number }[]
   start?: { x: number; y: number }
+  memoryElements?: MemoryElement[]
+  citizens?: number[][]
+  lore?: string
 }
 
 interface IsometricMazeProps {
   data: MazeData
   tileSize?: number
-  theme?: 'neon' | 'forest' | 'dungeon' | 'candy'
+  theme?: 'neon' | 'forest' | 'dungeon' | 'candy' | 'swamp'
+  showCitizens?: boolean
 }
 
 // Color themes - pixel art style
@@ -67,7 +79,32 @@ const THEMES = {
     glow: 0xff88ff,
     bg: 0x220022,
   },
+  swamp: {
+    wall: 0x1a3d2e,
+    wallTop: 0x2a5d3e,
+    wallSide: 0x0a2d1e,
+    floor: 0x0d1f15,
+    floorAlt: 0x0f2518,
+    start: 0x00ff66,
+    exit: 0xff4400,
+    hiding: 0x00aacc,
+    glow: 0x33ff99,
+    bg: 0x050a08,
+  },
 }
+
+// Memory element colors
+const MEMORY_COLORS = {
+  MEMORIAL: 0xff88cc,
+  HOBBY_ZONE: 0xffaa00,
+  SHRINE: 0xaa00ff,
+  TROPHY: 0xffcc00,
+  PORTAL: 0x00ccff,
+  PET_AREA: 0x88ff88,
+}
+
+// Citizen color (Game of Life cells)
+const CITIZEN_COLOR = 0x00ff99
 
 // Convert cartesian to isometric
 function toIso(x: number, y: number, tileW: number, tileH: number): { x: number; y: number } {
@@ -77,12 +114,13 @@ function toIso(x: number, y: number, tileW: number, tileH: number): { x: number;
   }
 }
 
-export default function IsometricMaze({ data, tileSize = 32, theme = 'neon' }: IsometricMazeProps) {
+export default function IsometricMaze({ data, tileSize = 32, theme = 'neon', showCitizens = false }: IsometricMazeProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const appRef = useRef<Application | null>(null)
   const [playerPos, setPlayerPos] = useState(data.start || { x: 1, y: 1 })
+  const [citizensState, setCitizensState] = useState<number[][] | null>(data.citizens || null)
   
-  const colors = THEMES[theme]
+  const colors = THEMES[theme] || THEMES.neon
   const tileW = tileSize
   const tileH = tileSize / 2
   const wallHeight = tileSize * 0.8
@@ -230,6 +268,66 @@ export default function IsometricMaze({ data, tileSize = 32, theme = 'neon' }: I
                 screenX - tileSize / 6, screenY + tileH / 4,
               ])
               graphics.fill()
+            } else if (cell === 'MEMORIAL') {
+              // Heart shape for person memory
+              graphics.fill({ color: MEMORY_COLORS.MEMORIAL, alpha: 0.8 })
+              graphics.circle(screenX - tileSize / 8, screenY - tileSize / 8, tileSize / 6)
+              graphics.circle(screenX + tileSize / 8, screenY - tileSize / 8, tileSize / 6)
+              graphics.poly([
+                screenX - tileSize / 4, screenY - tileSize / 12,
+                screenX + tileSize / 4, screenY - tileSize / 12,
+                screenX, screenY + tileH / 2,
+              ])
+              graphics.fill()
+            } else if (cell === 'HOBBY_ZONE') {
+              // Star for hobbies
+              graphics.fill({ color: MEMORY_COLORS.HOBBY_ZONE, alpha: 0.8 })
+              const starPoints: number[] = []
+              for (let i = 0; i < 10; i++) {
+                const radius = i % 2 === 0 ? tileSize / 4 : tileSize / 8
+                const angle = (i * Math.PI) / 5 - Math.PI / 2
+                starPoints.push(screenX + Math.cos(angle) * radius)
+                starPoints.push(screenY + Math.sin(angle) * radius + tileH / 4)
+              }
+              graphics.poly(starPoints)
+              graphics.fill()
+            } else if (cell === 'SHRINE') {
+              // Diamond for interests
+              graphics.fill({ color: MEMORY_COLORS.SHRINE, alpha: 0.8 })
+              graphics.poly([
+                screenX, screenY - tileSize / 4,
+                screenX + tileSize / 5, screenY + tileH / 4,
+                screenX, screenY + tileH / 2 + tileSize / 8,
+                screenX - tileSize / 5, screenY + tileH / 4,
+              ])
+              graphics.fill()
+            } else if (cell === 'TROPHY') {
+              // Trophy cup shape
+              graphics.fill({ color: MEMORY_COLORS.TROPHY, alpha: 0.9 })
+              graphics.rect(screenX - tileSize / 6, screenY - tileSize / 8, tileSize / 3, tileSize / 4)
+              graphics.rect(screenX - tileSize / 10, screenY + tileSize / 8, tileSize / 5, tileSize / 8)
+              graphics.fill()
+            } else if (cell === 'PORTAL') {
+              // Swirling portal
+              graphics.fill({ color: MEMORY_COLORS.PORTAL, alpha: 0.6 })
+              graphics.circle(screenX, screenY + tileH / 4, tileSize / 4)
+              graphics.fill({ color: 0x000022, alpha: 0.8 })
+              graphics.circle(screenX, screenY + tileH / 4, tileSize / 8)
+              graphics.fill()
+            } else if (cell === 'PET_AREA') {
+              // Paw print
+              graphics.fill({ color: MEMORY_COLORS.PET_AREA, alpha: 0.8 })
+              graphics.circle(screenX, screenY, tileSize / 6)
+              graphics.circle(screenX - tileSize / 8, screenY - tileSize / 6, tileSize / 10)
+              graphics.circle(screenX + tileSize / 8, screenY - tileSize / 6, tileSize / 10)
+              graphics.fill()
+            }
+            
+            // Draw citizen if present (Game of Life)
+            if (showCitizens && citizensState && citizensState[y]?.[x] === 1) {
+              graphics.fill({ color: CITIZEN_COLOR, alpha: 0.7 })
+              graphics.circle(screenX, screenY + tileH / 4, tileSize / 5)
+              graphics.fill()
             }
           }
         }
@@ -275,7 +373,7 @@ export default function IsometricMaze({ data, tileSize = 32, theme = 'neon' }: I
         appRef.current = null
       }
     }
-  }, [data, colors, theme, tileW, tileH, wallHeight, drawTile, drawPlayer, playerPos])
+  }, [data, colors, theme, tileW, tileH, wallHeight, drawTile, drawPlayer, playerPos, citizensState, showCitizens])
 
   // Keyboard controls
   useEffect(() => {

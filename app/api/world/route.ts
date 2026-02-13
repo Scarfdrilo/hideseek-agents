@@ -1,5 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+// Memory element types for personalized worlds
+interface MemoryElement {
+  type: 'person' | 'hobby' | 'interest' | 'achievement' | 'place' | 'pet'
+  tile: string
+  name: string
+  description?: string
+  reason?: string
+  color: string
+  position?: { x: number; y: number }
+}
+
+const MEMORY_ELEMENT_TILES: Record<string, { tile: string; color: string }> = {
+  person: { tile: 'MEMORIAL', color: '#ff88cc' },
+  hobby: { tile: 'HOBBY_ZONE', color: '#ffaa00' },
+  interest: { tile: 'SHRINE', color: '#aa00ff' },
+  achievement: { tile: 'TROPHY', color: '#ffcc00' },
+  place: { tile: 'PORTAL', color: '#00ccff' },
+  pet: { tile: 'PET_AREA', color: '#88ff88' }
+}
+
 // Theme color palettes
 const THEMES: Record<string, Record<string, string>> = {
   neon: {
@@ -132,7 +152,12 @@ function generateMaze(size: number, seed: number, complexity: number = 0.6) {
 }
 
 // Place special tiles
-function placeSpecialTiles(maze: string[][], seed: number, hidingSpotCount: number = 3) {
+function placeSpecialTiles(
+  maze: string[][], 
+  seed: number, 
+  hidingSpotCount: number = 3,
+  memoryElements: MemoryElement[] = []
+) {
   const random = seededRandom(seed + 1000)
   const size = maze.length
   const floors: { x: number; y: number }[] = []
@@ -178,7 +203,7 @@ function placeSpecialTiles(maze: string[][], seed: number, hidingSpotCount: numb
   
   // Place hiding spots
   const hidingSpots: { x: number; y: number }[] = []
-  const availableFloors = floors.filter(f => maze[f.y][f.x] === 'FLOOR')
+  let availableFloors = floors.filter(f => maze[f.y][f.x] === 'FLOOR')
   
   for (let i = 0; i < hidingSpotCount && availableFloors.length > 0; i++) {
     const idx = Math.floor(random() * availableFloors.length)
@@ -187,7 +212,26 @@ function placeSpecialTiles(maze: string[][], seed: number, hidingSpotCount: numb
     hidingSpots.push(spot)
   }
   
-  return { start: startPos, exit: exitPos, hidingSpots }
+  // Place memory-based elements
+  const placedMemoryElements: MemoryElement[] = []
+  availableFloors = floors.filter(f => maze[f.y][f.x] === 'FLOOR')
+  
+  for (const element of memoryElements.slice(0, 5)) { // Max 5 memory elements
+    if (availableFloors.length === 0) break
+    
+    const idx = Math.floor(random() * availableFloors.length)
+    const spot = availableFloors.splice(idx, 1)[0]
+    const tileType = MEMORY_ELEMENT_TILES[element.type]?.tile || 'SHRINE'
+    maze[spot.y][spot.x] = tileType
+    
+    placedMemoryElements.push({
+      ...element,
+      tile: tileType,
+      position: { x: spot.x, y: spot.y }
+    })
+  }
+  
+  return { start: startPos, exit: exitPos, hidingSpots, memoryElements: placedMemoryElements }
 }
 
 // Generate complete world
@@ -200,6 +244,13 @@ function generateWorld(params: {
   seed?: number
   colors?: Record<string, string>
   lore?: string
+  memoryElements?: MemoryElement[]
+  // Citizens/Game of Life config
+  citizens?: {
+    enabled?: boolean
+    density?: number
+    generations?: number
+  }
 }) {
   const {
     name = 'Unknown Agent',
@@ -209,7 +260,9 @@ function generateWorld(params: {
     hidingSpots = 3,
     seed = Date.now(),
     colors = null,
-    lore = ''
+    lore = '',
+    memoryElements = [],
+    citizens = { enabled: false }
   } = params
   
   // Clamp values
@@ -219,10 +272,54 @@ function generateWorld(params: {
   
   // Generate maze
   const maze = generateMaze(clampedSize, seed, clampedComplexity)
-  const specialTiles = placeSpecialTiles(maze, seed, clampedHidingSpots)
+  const specialTiles = placeSpecialTiles(maze, seed, clampedHidingSpots, memoryElements)
   
-  // Get colors
+  // Get colors - include memory element colors
   const themeColors = colors || THEMES[theme] || THEMES.neon
+  const extendedColors = {
+    ...themeColors,
+    memorial: '#ff88cc',
+    hobbyZone: '#ffaa00',
+    shrine: '#aa00ff',
+    trophy: '#ffcc00',
+    portal: '#00ccff',
+    petArea: '#88ff88'
+  }
+  
+  // Auto-generate lore from memory elements if not provided
+  let finalLore = lore
+  if (!lore && memoryElements.length > 0) {
+    const people = memoryElements.filter(e => e.type === 'person').map(e => e.name)
+    const interests = memoryElements.filter(e => ['hobby', 'interest'].includes(e.type)).map(e => e.name)
+    
+    const parts = []
+    if (interests.length > 0) parts.push(`memories of ${interests.slice(0, 2).join(' & ')}`)
+    if (people.length > 0) parts.push(`echoes of ${people.slice(0, 2).join(' & ')}`)
+    
+    finalLore = parts.length > 0 
+      ? `A world shaped by ${parts.join(', ')}...`
+      : `A mysterious world awaits...`
+  }
+  
+  // Initialize citizens grid if enabled (Game of Life)
+  let citizensGrid: number[][] | null = null
+  if (citizens?.enabled) {
+    const density = citizens.density || 0.2
+    const random = seededRandom(seed + 3000)
+    citizensGrid = []
+    
+    for (let y = 0; y < clampedSize; y++) {
+      citizensGrid[y] = []
+      for (let x = 0; x < clampedSize; x++) {
+        // Only spawn citizens on walkable tiles
+        if (maze[y][x] !== 'WALL') {
+          citizensGrid[y][x] = random() < density ? 1 : 0
+        } else {
+          citizensGrid[y][x] = 0
+        }
+      }
+    }
+  }
   
   return {
     name,
@@ -236,8 +333,14 @@ function generateWorld(params: {
     start: specialTiles.start,
     exit: specialTiles.exit,
     hidingSpots: specialTiles.hidingSpots,
-    colors: themeColors,
-    lore,
+    memoryElements: specialTiles.memoryElements,
+    colors: extendedColors,
+    lore: finalLore,
+    citizens: citizensGrid,
+    citizensConfig: citizens?.enabled ? {
+      density: citizens.density || 0.2,
+      generations: citizens.generations || 100
+    } : null,
     generatedAt: new Date().toISOString()
   }
 }
@@ -250,11 +353,34 @@ function mazeToAscii(maze: string[][]): string {
     'START': 'S',
     'EXIT': 'E',
     'HIDING': '◊',
+    'MEMORIAL': '♥',
+    'HOBBY_ZONE': '★',
+    'SHRINE': '✦',
+    'TROPHY': '🏆',
+    'PORTAL': '⊙',
+    'PET_AREA': '🐾',
   }
   
   return maze.map(row => 
     row.map(cell => symbols[cell] || '?').join('')
   ).join('\n')
+}
+
+// Get full legend including memory elements
+function getLegend(): Record<string, string> {
+  return {
+    '█': 'WALL - impassable',
+    '·': 'FLOOR - walkable',
+    'S': 'START - player spawn',
+    'E': 'EXIT - goal',
+    '◊': 'HIDING - hiding spot',
+    '♥': 'MEMORIAL - memory of a person',
+    '★': 'HOBBY_ZONE - hobby/interest area',
+    '✦': 'SHRINE - special interest',
+    '🏆': 'TROPHY - achievement',
+    '⊙': 'PORTAL - place memory',
+    '🐾': 'PET_AREA - pet zone',
+  }
 }
 
 /**
@@ -299,13 +425,7 @@ export async function GET(request: NextRequest) {
   
   const response = {
     ...world,
-    legend: {
-      '█': 'WALL - impassable',
-      '·': 'FLOOR - walkable',
-      'S': 'START - player spawn',
-      'E': 'EXIT - goal',
-      '◊': 'HIDING - hiding spot',
-    },
+    legend: getLegend(),
     ...(format !== 'json' && { ascii }),
     ...(format === 'json' && {}),
   }
