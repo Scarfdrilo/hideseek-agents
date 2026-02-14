@@ -80,31 +80,31 @@ const THEMES = {
     bg: 0x220022,
   },
   swamp: {
-    wall: 0x1a3d2e,
-    wallTop: 0x2a5d3e,
-    wallSide: 0x0a2d1e,
-    floor: 0x0d1f15,
-    floorAlt: 0x0f2518,
-    start: 0x00ff66,
-    exit: 0xff4400,
-    hiding: 0x00aacc,
-    glow: 0x33ff99,
-    bg: 0x050a08,
+    wall: 0x1a5530,      // Brighter green walls
+    wallTop: 0x2a7540,   // Even brighter top
+    wallSide: 0x0a3520,  // Darker side
+    floor: 0x0a2510,     // Dark swamp floor
+    floorAlt: 0x0c2a12,  // Slightly different
+    start: 0x00ff66,     // Bright green start
+    exit: 0xff6600,      // Orange exit
+    hiding: 0x00ffcc,    // Cyan hiding
+    glow: 0x44ff88,      // Green glow
+    bg: 0x020a04,        // Very dark green bg
   },
 }
 
-// Memory element colors
+// Memory element colors - BRIGHT and visible!
 const MEMORY_COLORS = {
-  MEMORIAL: 0xff88cc,
-  HOBBY_ZONE: 0xffaa00,
-  SHRINE: 0xaa00ff,
-  TROPHY: 0xffcc00,
-  PORTAL: 0x00ccff,
-  PET_AREA: 0x88ff88,
+  MEMORIAL: 0xff44aa,    // Hot pink heart
+  HOBBY_ZONE: 0xffdd00,  // Bright yellow star
+  SHRINE: 0xdd00ff,      // Bright purple diamond
+  TROPHY: 0xffd700,      // Gold trophy
+  PORTAL: 0x00eeff,      // Bright cyan portal
+  PET_AREA: 0x44ff44,    // Bright green paw
 }
 
-// Citizen color (Game of Life cells)
-const CITIZEN_COLOR = 0x00ff99
+// Citizen color (Game of Life cells) - pulsing green
+const CITIZEN_COLOR = 0x00ff88
 
 // Convert cartesian to isometric
 function toIso(x: number, y: number, tileW: number, tileH: number): { x: number; y: number } {
@@ -269,22 +269,32 @@ export default function IsometricMaze({ data, tileSize = 32, theme = 'neon', sho
               ])
               graphics.fill()
             } else if (cell === 'MEMORIAL') {
-              // Heart shape for person memory
-              graphics.fill({ color: MEMORY_COLORS.MEMORIAL, alpha: 0.8 })
-              graphics.circle(screenX - tileSize / 8, screenY - tileSize / 8, tileSize / 6)
-              graphics.circle(screenX + tileSize / 8, screenY - tileSize / 8, tileSize / 6)
+              // HEART - person memory (BIG and glowing)
+              // Glow effect
+              graphics.fill({ color: MEMORY_COLORS.MEMORIAL, alpha: 0.3 })
+              graphics.circle(screenX, screenY, tileSize / 2)
+              graphics.fill()
+              // Heart shape
+              graphics.fill({ color: MEMORY_COLORS.MEMORIAL, alpha: 1 })
+              graphics.circle(screenX - tileSize / 5, screenY - tileSize / 6, tileSize / 4)
+              graphics.circle(screenX + tileSize / 5, screenY - tileSize / 6, tileSize / 4)
               graphics.poly([
-                screenX - tileSize / 4, screenY - tileSize / 12,
-                screenX + tileSize / 4, screenY - tileSize / 12,
-                screenX, screenY + tileH / 2,
+                screenX - tileSize / 2.5, screenY - tileSize / 10,
+                screenX + tileSize / 2.5, screenY - tileSize / 10,
+                screenX, screenY + tileH,
               ])
               graphics.fill()
             } else if (cell === 'HOBBY_ZONE') {
-              // Star for hobbies
-              graphics.fill({ color: MEMORY_COLORS.HOBBY_ZONE, alpha: 0.8 })
+              // STAR - hobbies (BIG golden star)
+              // Glow effect
+              graphics.fill({ color: MEMORY_COLORS.HOBBY_ZONE, alpha: 0.3 })
+              graphics.circle(screenX, screenY + tileH / 4, tileSize / 2)
+              graphics.fill()
+              // Star shape
+              graphics.fill({ color: MEMORY_COLORS.HOBBY_ZONE, alpha: 1 })
               const starPoints: number[] = []
               for (let i = 0; i < 10; i++) {
-                const radius = i % 2 === 0 ? tileSize / 4 : tileSize / 8
+                const radius = i % 2 === 0 ? tileSize / 2.5 : tileSize / 5
                 const angle = (i * Math.PI) / 5 - Math.PI / 2
                 starPoints.push(screenX + Math.cos(angle) * radius)
                 starPoints.push(screenY + Math.sin(angle) * radius + tileH / 4)
@@ -292,34 +302,59 @@ export default function IsometricMaze({ data, tileSize = 32, theme = 'neon', sho
               graphics.poly(starPoints)
               graphics.fill()
             } else if (cell === 'SHRINE') {
-              // Diamond for interests
-              graphics.fill({ color: MEMORY_COLORS.SHRINE, alpha: 0.8 })
+              // DIAMOND - interests (BIG purple gem)
+              // Glow effect
+              graphics.fill({ color: MEMORY_COLORS.SHRINE, alpha: 0.3 })
+              graphics.circle(screenX, screenY + tileH / 4, tileSize / 2)
+              graphics.fill()
+              // Diamond
+              graphics.fill({ color: MEMORY_COLORS.SHRINE, alpha: 1 })
               graphics.poly([
-                screenX, screenY - tileSize / 4,
-                screenX + tileSize / 5, screenY + tileH / 4,
-                screenX, screenY + tileH / 2 + tileSize / 8,
-                screenX - tileSize / 5, screenY + tileH / 4,
+                screenX, screenY - tileSize / 3,
+                screenX + tileSize / 3, screenY + tileH / 4,
+                screenX, screenY + tileH + tileSize / 6,
+                screenX - tileSize / 3, screenY + tileH / 4,
               ])
               graphics.fill()
             } else if (cell === 'TROPHY') {
-              // Trophy cup shape
-              graphics.fill({ color: MEMORY_COLORS.TROPHY, alpha: 0.9 })
-              graphics.rect(screenX - tileSize / 6, screenY - tileSize / 8, tileSize / 3, tileSize / 4)
-              graphics.rect(screenX - tileSize / 10, screenY + tileSize / 8, tileSize / 5, tileSize / 8)
+              // TROPHY - achievements (golden cup)
+              // Glow effect
+              graphics.fill({ color: MEMORY_COLORS.TROPHY, alpha: 0.3 })
+              graphics.circle(screenX, screenY, tileSize / 2)
+              graphics.fill()
+              // Cup
+              graphics.fill({ color: MEMORY_COLORS.TROPHY, alpha: 1 })
+              graphics.rect(screenX - tileSize / 4, screenY - tileSize / 4, tileSize / 2, tileSize / 2.5)
+              graphics.rect(screenX - tileSize / 6, screenY + tileSize / 6, tileSize / 3, tileSize / 6)
               graphics.fill()
             } else if (cell === 'PORTAL') {
-              // Swirling portal
-              graphics.fill({ color: MEMORY_COLORS.PORTAL, alpha: 0.6 })
-              graphics.circle(screenX, screenY + tileH / 4, tileSize / 4)
-              graphics.fill({ color: 0x000022, alpha: 0.8 })
-              graphics.circle(screenX, screenY + tileH / 4, tileSize / 8)
+              // PORTAL - swirling cyan (animated feel)
+              // Outer glow
+              graphics.fill({ color: MEMORY_COLORS.PORTAL, alpha: 0.2 })
+              graphics.circle(screenX, screenY + tileH / 4, tileSize / 2)
+              graphics.fill()
+              // Rings
+              graphics.fill({ color: MEMORY_COLORS.PORTAL, alpha: 0.8 })
+              graphics.circle(screenX, screenY + tileH / 4, tileSize / 3)
+              graphics.fill({ color: 0x004466, alpha: 1 })
+              graphics.circle(screenX, screenY + tileH / 4, tileSize / 5)
+              graphics.fill({ color: 0x000033, alpha: 1 })
+              graphics.circle(screenX, screenY + tileH / 4, tileSize / 10)
               graphics.fill()
             } else if (cell === 'PET_AREA') {
-              // Paw print
-              graphics.fill({ color: MEMORY_COLORS.PET_AREA, alpha: 0.8 })
-              graphics.circle(screenX, screenY, tileSize / 6)
-              graphics.circle(screenX - tileSize / 8, screenY - tileSize / 6, tileSize / 10)
-              graphics.circle(screenX + tileSize / 8, screenY - tileSize / 6, tileSize / 10)
+              // PAW PRINT - pets
+              // Glow
+              graphics.fill({ color: MEMORY_COLORS.PET_AREA, alpha: 0.3 })
+              graphics.circle(screenX, screenY + tileH / 4, tileSize / 2)
+              graphics.fill()
+              // Main pad
+              graphics.fill({ color: MEMORY_COLORS.PET_AREA, alpha: 1 })
+              graphics.circle(screenX, screenY + tileH / 6, tileSize / 4)
+              // Toe pads
+              graphics.circle(screenX - tileSize / 5, screenY - tileSize / 6, tileSize / 7)
+              graphics.circle(screenX + tileSize / 5, screenY - tileSize / 6, tileSize / 7)
+              graphics.circle(screenX - tileSize / 8, screenY - tileSize / 3, tileSize / 8)
+              graphics.circle(screenX + tileSize / 8, screenY - tileSize / 3, tileSize / 8)
               graphics.fill()
             }
             
