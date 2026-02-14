@@ -103,17 +103,70 @@ function generateDemoMaze() {
     width: size,
     height: size,
     hidingSpots: [{ x: 5, y: 3 }, { x: 9, y: 7 }],
-    start: { x: 1, y: 1 }
+    start: { x: 1, y: 1 },
+    memoryElements: undefined as any,
+    citizens: undefined as any,
+    lore: undefined as any
   };
+}
+
+// Extended maze data type for featured worlds
+interface ExtendedMazeData {
+  maze: string[][]
+  width: number
+  height: number
+  hidingSpots: { x: number; y: number }[]
+  start: { x: number; y: number }
+  memoryElements?: any[]
+  citizens?: number[][]
+  lore?: string
 }
 
 type Screen = 'landing' | 'marketplace' | 'playing'
 
+// Featured world data type
+interface FeaturedWorld {
+  name: string
+  theme: 'neon' | 'forest' | 'dungeon' | 'candy' | 'swamp'
+  maze: string[][]
+  citizens?: number[][]
+  memoryElements?: any[]
+  lore?: string
+  size: number
+  start?: { x: number; y: number }
+  hidingSpots?: { x: number; y: number }[]
+}
+
 export default function Home() {
   const [screen, setScreen] = useState<Screen>('landing')
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null)
-  const [demoMaze, setDemoMaze] = useState(() => generateDemoMaze())
+  const [demoMaze, setDemoMaze] = useState<ExtendedMazeData>(() => generateDemoMaze())
   const [theme, setTheme] = useState<'neon' | 'forest' | 'dungeon' | 'candy'>('neon')
+  const [featuredWorld, setFeaturedWorld] = useState<FeaturedWorld | null>(null)
+
+  // Load Scarfdrilo's featured world on mount
+  useEffect(() => {
+    fetch('/worlds/scarfdrilo.json')
+      .then(res => res.json())
+      .then(data => {
+        setFeaturedWorld(data)
+        setDemoMaze({
+          maze: data.maze,
+          width: data.size,
+          height: data.size,
+          hidingSpots: data.hidingSpots || [],
+          start: data.start || { x: 1, y: 1 },
+          memoryElements: data.memoryElements,
+          citizens: data.citizens,
+          lore: data.lore
+        })
+        setTheme(data.theme as 'neon' | 'forest' | 'dungeon' | 'candy' || 'candy')
+      })
+      .catch(() => {
+        // Fallback to generated maze
+        setDemoMaze(generateDemoMaze())
+      })
+  }, [])
 
   const handleEnterWorld = (agent: Agent) => {
     setSelectedAgent(agent)
@@ -125,9 +178,9 @@ export default function Home() {
     setSelectedAgent(null)
   }
 
-  // Cycle themes for demo
+  // Only cycle themes if no featured world loaded
   useEffect(() => {
-    if (screen === 'landing') {
+    if (screen === 'landing' && !featuredWorld) {
       const themes: ('neon' | 'forest' | 'dungeon' | 'candy')[] = ['neon', 'forest', 'dungeon', 'candy']
       let idx = 0
       const interval = setInterval(() => {
@@ -137,7 +190,7 @@ export default function Home() {
       }, 8000)
       return () => clearInterval(interval)
     }
-  }, [screen])
+  }, [screen, featuredWorld])
 
   if (screen === 'playing' && selectedAgent) {
     return (
@@ -154,7 +207,7 @@ export default function Home() {
             ⚡ {selectedAgent.balance.toFixed(4)} MON
           </div>
         </div>
-        <IsometricMaze data={demoMaze} theme="neon" tileSize={40} />
+        <IsometricMaze data={demoMaze} theme={theme} tileSize={40} showCitizens={true} />
         <style jsx>{`
           .game-container {
             position: relative;
@@ -230,7 +283,7 @@ export default function Home() {
       
       {/* Demo maze preview */}
       <div className="maze-preview">
-        <IsometricMaze data={demoMaze} theme={theme} tileSize={24} />
+        <IsometricMaze data={demoMaze} theme={theme} tileSize={24} showCitizens={true} />
       </div>
       
       {/* Hero overlay */}
