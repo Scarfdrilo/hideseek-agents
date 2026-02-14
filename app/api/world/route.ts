@@ -540,24 +540,115 @@ function generateZoneWorld(params: {
   }
 }
 
+// In-memory world storage (for real-time updates - resets on deploy)
+const worldStorage: Map<string, any> = new Map()
+
 /**
  * POST /api/world
- * Generate a world from JSON body
+ * Generate or update a world
  * 
- * For zone-based worlds (new format), pass format: 'zones' and memories array
- * For maze-based worlds (old format), pass normal params
+ * Actions:
+ * - action: 'create' - Create new world with memories
+ * - action: 'add_memory' - Add a single memory to existing world (INTENSAMENTE style!)
+ * - action: 'get' - Get current world state
+ * - (default) - Generate world from memories array
  */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
+    const agentKey = (body.name || 'unknown').toLowerCase().replace(/\s+/g, '')
     
-    // Check if requesting zone-based world
-    if (body.format === 'zones' || body.memories) {
+    // 🧠 INTENSAMENTE MODE: Add single memory = new zone appears!
+    if (body.action === 'add_memory') {
+      if (!body.name || !body.memory) {
+        return NextResponse.json({ 
+          error: 'name and memory required',
+          example: {
+            action: 'add_memory',
+            name: 'MiAgente',
+            memory: { type: 'person', name: 'Mamá', description: 'La mejor' }
+          }
+        }, { status: 400 })
+      }
+      
+      // Get or create world
+      let existingWorld = worldStorage.get(agentKey)
+      let memories: any[] = []
+      
+      if (existingWorld) {
+        // Extract existing memories from zones
+        memories = existingWorld.zones.map((z: any) => ({
+          type: z.type,
+          name: z.name,
+          description: z.description
+        }))
+      }
+      
+      // Add new memory (max 6 zones)
+      if (memories.length < 6) {
+        memories.push(body.memory)
+      } else {
+        return NextResponse.json({
+          success: false,
+          error: 'Maximum 6 zones reached!',
+          world: existingWorld
+        })
+      }
+      
+      // Regenerate world with new memory
+      const updatedWorld = generateZoneWorld({
+        name: body.name,
+        theme: body.theme || existingWorld?.theme || 'candy',
+        memories
+      })
+      
+      // Store updated world
+      worldStorage.set(agentKey, updatedWorld)
+      
+      return NextResponse.json({
+        success: true,
+        action: 'memory_added',
+        newZone: updatedWorld.zones[updatedWorld.zones.length - 1],
+        totalZones: updatedWorld.zones.length,
+        message: `🧠 Nueva memoria "${body.memory.name}" → 🏝️ Nueva zona creada!`,
+        world: updatedWorld,
+        url: `https://hideseek-agents.vercel.app/world/${agentKey}`
+      }, {
+        headers: { 'Cache-Control': 'no-store' }
+      })
+    }
+    
+    // Get current world state
+    if (body.action === 'get') {
+      const world = worldStorage.get(agentKey)
+      if (!world) {
+        return NextResponse.json({ 
+          success: false, 
+          error: 'World not found',
+          hint: 'Create a world first with action: "create" or add memories with action: "add_memory"'
+        }, { status: 404 })
+      }
+      return NextResponse.json({ success: true, world })
+    }
+    
+    // Create new world (or recreate from scratch)
+    if (body.action === 'create' || body.format === 'zones' || body.memories) {
       if (!body.name) {
         return NextResponse.json({ error: 'name is required' }, { status: 400 })
       }
       if (!body.memories || !Array.isArray(body.memories) || body.memories.length === 0) {
-        return NextResponse.json({ error: 'memories array is required' }, { status: 400 })
+        return NextResponse.json({ 
+          error: 'memories array is required',
+          example: {
+            action: 'create',
+            name: 'MiAgente',
+            theme: 'candy',
+            memories: [
+              { type: 'person', name: 'Mamá', description: 'La mejor' },
+              { type: 'hobby', name: 'gaming', description: 'FPS lover' }
+            ]
+          }
+        }, { status: 400 })
       }
       
       const world = generateZoneWorld({
@@ -566,17 +657,25 @@ export async function POST(request: NextRequest) {
         memories: body.memories
       })
       
+      // Store in memory
+      worldStorage.set(agentKey, world)
+      
       return NextResponse.json({
         success: true,
+        action: 'world_created',
+        zonesCreated: world.zones.length,
         world,
-        url: `https://hideseek-agents.vercel.app/world/${body.name.toLowerCase().replace(/\s+/g, '')}`,
-        instructions: 'Save this JSON to public/worlds/[name].json and commit to make it accessible via URL'
+        url: `https://hideseek-agents.vercel.app/world/${agentKey}`,
+        nextSteps: {
+          addMemory: 'POST with action: "add_memory" to add more zones',
+          viewWorld: `Visit ${`https://hideseek-agents.vercel.app/world/${agentKey}`}`
+        }
       }, {
         headers: { 'Cache-Control': 'no-store' }
       })
     }
     
-    // Default: maze-based world
+    // Default: maze-based world (legacy)
     const world = generateWorld(body)
     
     return NextResponse.json(world, {
@@ -586,7 +685,7 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     return NextResponse.json(
-      { error: 'Invalid request body' },
+      { error: 'Invalid request body', details: String(error) },
       { status: 400 }
     )
   }

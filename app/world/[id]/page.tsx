@@ -164,7 +164,32 @@ export default function WorldPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Try to load pre-generated world JSON first
+        // 🧠 INTENSAMENTE: Try real-time API first (in-memory worlds)
+        const apiRes = await fetch('/api/world', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'get', name: id })
+        })
+        
+        if (apiRes.ok) {
+          const apiData = await apiRes.json()
+          if (apiData.success && apiData.world) {
+            setWorldData(apiData.world)
+            setAgent({
+              id: 0,
+              owner: '0x0000000000000000000000000000000000000000',
+              name: apiData.world.name,
+              entryFeeFormatted: '0.003 MON',
+              totalVisits: 0,
+              totalEarnedFormatted: '0 MON',
+              isActive: true,
+            })
+            setLoading(false)
+            return
+          }
+        }
+        
+        // Fallback: Try static JSON file
         if (isNamedWorld) {
           const worldRes = await fetch(`/worlds/${id.toLowerCase()}.json`)
           if (worldRes.ok) {
