@@ -2,6 +2,9 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { Application, Graphics, Text, TextStyle, Container, Sprite, Texture } from 'pixi.js'
+import dynamic from 'next/dynamic'
+
+const ZoneLabyrinth = dynamic(() => import('./ZoneLabyrinth'), { ssr: false })
 
 interface Zone {
   id: string
@@ -83,6 +86,7 @@ export default function WorldView({ data, tileSize = 32 }: WorldViewProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const appRef = useRef<Application | null>(null)
   const [hoveredZone, setHoveredZone] = useState<Zone | null>(null)
+  const [selectedZone, setSelectedZone] = useState<Zone | null>(null)
   
   const colors = THEMES[data.theme] || THEMES.candy
   const tileW = tileSize
@@ -174,14 +178,31 @@ export default function WorldView({ data, tileSize = 32 }: WorldViewProps) {
         }
       }
 
-      // Draw zone labels and decorations
+      // Draw zone labels and decorations (CLICKABLE!)
       for (const zone of data.zones) {
         const { x: zx, y: zy } = toIso(zone.centerX, zone.centerY)
         
-        // Zone glow effect
-        graphics.fill({ color: parseInt(zone.color.replace('#', ''), 16), alpha: 0.3 })
-        graphics.circle(zx, zy, tileSize * 2)
-        graphics.fill()
+        // Clickable zone container
+        const zoneContainer = new Container()
+        zoneContainer.eventMode = 'static'
+        zoneContainer.cursor = 'pointer'
+        zoneContainer.on('pointerdown', () => setSelectedZone(zone))
+        zoneContainer.on('pointerover', () => setHoveredZone(zone))
+        zoneContainer.on('pointerout', () => setHoveredZone(null))
+        worldContainer.addChild(zoneContainer)
+        
+        const zoneGraphics = new Graphics()
+        zoneContainer.addChild(zoneGraphics)
+        
+        // Zone glow effect (clickable area)
+        zoneGraphics.fill({ color: parseInt(zone.color.replace('#', ''), 16), alpha: 0.3 })
+        zoneGraphics.circle(zx, zy, tileSize * 2.5)
+        zoneGraphics.fill()
+        
+        // Inner highlight
+        zoneGraphics.fill({ color: parseInt(zone.color.replace('#', ''), 16), alpha: 0.2 })
+        zoneGraphics.circle(zx, zy, tileSize * 1.5)
+        zoneGraphics.fill()
         
         // Zone name label
         const labelStyle = new TextStyle({
@@ -199,7 +220,18 @@ export default function WorldView({ data, tileSize = 32 }: WorldViewProps) {
         const label = new Text({ text: zone.name.toUpperCase(), style: labelStyle })
         label.anchor.set(0.5)
         label.position.set(zx, zy - tileSize * 1.5)
-        worldContainer.addChild(label)
+        zoneContainer.addChild(label)
+        
+        // "Click to enter" hint
+        const hintStyle = new TextStyle({
+          fontFamily: 'monospace',
+          fontSize: 10,
+          fill: parseInt(zone.color.replace('#', ''), 16),
+        })
+        const hint = new Text({ text: '▶ ENTRAR', style: hintStyle })
+        hint.anchor.set(0.5)
+        hint.position.set(zx, zy + tileSize * 1.8)
+        zoneContainer.addChild(hint)
         
         // Zone decorations as emoji text
         for (const decor of zone.decorations) {
@@ -340,7 +372,7 @@ export default function WorldView({ data, tileSize = 32 }: WorldViewProps) {
       }}
     >
       {/* Zone info tooltip */}
-      {hoveredZone && (
+      {hoveredZone && !selectedZone && (
         <div style={{
           position: 'absolute',
           bottom: 60,
@@ -354,14 +386,41 @@ export default function WorldView({ data, tileSize = 32 }: WorldViewProps) {
           maxWidth: 300
         }}>
           <div style={{ fontWeight: 'bold', color: hoveredZone.color, marginBottom: 4 }}>
-            {hoveredZone.name}
+            🎮 {hoveredZone.name}
           </div>
           {hoveredZone.description && (
-            <div style={{ fontSize: 12, opacity: 0.8 }}>
+            <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 8 }}>
               {hoveredZone.description}
             </div>
           )}
+          <div style={{ fontSize: 11, color: hoveredZone.color }}>
+            ▶ Click para explorar el laberinto
+          </div>
         </div>
+      )}
+
+      {/* Instructions */}
+      <div style={{
+        position: 'absolute',
+        top: 70,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        padding: '8px 16px',
+        background: 'rgba(0,0,0,0.7)',
+        borderRadius: 20,
+        color: '#888',
+        fontFamily: 'monospace',
+        fontSize: 12,
+      }}>
+        👆 Haz click en una zona para explorar su laberinto
+      </div>
+
+      {/* Zone Labyrinth Modal */}
+      {selectedZone && (
+        <ZoneLabyrinth 
+          zone={selectedZone} 
+          onClose={() => setSelectedZone(null)} 
+        />
       )}
     </div>
   )
