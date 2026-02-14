@@ -60,9 +60,9 @@
       "WALL",
       "FLOOR",
       "FLOOR",
+      "MEMORIAL",
       "FLOOR",
-      "FLOOR",
-      "FLOOR",
+      "SHRINE",
       "WALL",
       "FLOOR",
       "FLOOR",
@@ -136,7 +136,7 @@
       "FLOOR",
       "FLOOR",
       "WALL",
-      "SHRINE",
+      "FLOOR",
       "FLOOR",
       "FLOOR",
       "WALL"
@@ -166,42 +166,8 @@
       "WALL",
       "HIDING",
       "FLOOR",
-      "FLOOR",
       "HOBBY_ZONE",
       "FLOOR",
-      "WALL",
-      "FLOOR",
-      "FLOOR",
-      "SHRINE",
-      "WALL"
-    ],
-    [
-      "WALL",
-      "FLOOR",
-      "WALL",
-      "HOBBY_ZONE",
-      "WALL",
-      "FLOOR",
-      "WALL",
-      "FLOOR",
-      "WALL",
-      "FLOOR",
-      "WALL",
-      "FLOOR",
-      "WALL",
-      "WALL",
-      "WALL"
-    ],
-    [
-      "WALL",
-      "FLOOR",
-      "WALL",
-      "FLOOR",
-      "WALL",
-      "FLOOR",
-      "WALL",
-      "FLOOR",
-      "WALL",
       "FLOOR",
       "WALL",
       "FLOOR",
@@ -219,6 +185,40 @@
       "WALL",
       "FLOOR",
       "WALL",
+      "FLOOR",
+      "WALL",
+      "FLOOR",
+      "WALL",
+      "WALL",
+      "WALL"
+    ],
+    [
+      "WALL",
+      "FLOOR",
+      "WALL",
+      "FLOOR",
+      "WALL",
+      "FLOOR",
+      "WALL",
+      "FLOOR",
+      "WALL",
+      "FLOOR",
+      "WALL",
+      "FLOOR",
+      "FLOOR",
+      "FLOOR",
+      "WALL"
+    ],
+    [
+      "WALL",
+      "FLOOR",
+      "WALL",
+      "FLOOR",
+      "WALL",
+      "FLOOR",
+      "WALL",
+      "FLOOR",
+      "WALL",
       "WALL",
       "WALL",
       "WALL",
@@ -228,7 +228,7 @@
     ],
     [
       "WALL",
-      "MEMORIAL",
+      "FLOOR",
       "FLOOR",
       "FLOOR",
       "WALL",
@@ -237,8 +237,8 @@
       "FLOOR",
       "HIDING",
       "FLOOR",
-      "FLOOR",
-      "FLOOR",
+      "SHRINE",
+      "HOBBY_ZONE",
       "FLOOR",
       "FLOOR",
       "WALL"
@@ -291,8 +291,8 @@
       "description": "señora 60 años, teje con amor",
       "color": "#ff88cc",
       "position": {
-        "x": 1,
-        "y": 13
+        "x": 3,
+        "y": 3
       }
     },
     {
@@ -302,7 +302,7 @@
       "description": "zona de estambre mágico",
       "color": "#ffaa00",
       "position": {
-        "x": 8,
+        "x": 7,
         "y": 9
       }
     },
@@ -313,8 +313,8 @@
       "description": "altar del código",
       "color": "#aa00ff",
       "position": {
-        "x": 13,
-        "y": 9
+        "x": 5,
+        "y": 3
       }
     },
     {
@@ -324,8 +324,8 @@
       "description": "cripta crypto",
       "color": "#aa00ff",
       "position": {
-        "x": 11,
-        "y": 7
+        "x": 10,
+        "y": 13
       }
     },
     {
@@ -335,8 +335,8 @@
       "description": "zona de maratón",
       "color": "#ffaa00",
       "position": {
-        "x": 3,
-        "y": 10
+        "x": 11,
+        "y": 13
       }
     }
   ],
@@ -358,7 +358,7 @@
     "interestsCount": 0,
     "keywordsFound": []
   },
-  "generatedAt": "2026-02-14T01:13:58.494Z",
+  "generatedAt": "2026-02-14T01:21:01.032Z",
   "citizens": [
     [
       0,
@@ -389,24 +389,7 @@
       0,
       0,
       0,
-      0,
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
+      1,
       0,
       0,
       0
@@ -417,8 +400,8 @@
       0,
       0,
       0,
-      0,
-      0,
+      1,
+      1,
       0,
       0,
       0,
@@ -431,21 +414,6 @@
     [
       0,
       0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0
-    ],
-    [
       0,
       0,
       0,
@@ -455,31 +423,85 @@
       0,
       1,
       0,
+      1,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
       0,
       0,
       0,
       1,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      1,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0
+    ],
+    [
+      0,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
       0,
       1
     ],
     [
-      1,
       0,
       0,
       0,
       0,
       0,
-      0,
-      1,
-      1,
-      0,
-      0,
-      0,
-      1,
-      0,
-      0
-    ],
-    [
       0,
       0,
       0,
@@ -488,29 +510,7 @@
       0,
       0,
       1,
-      0,
-      0,
-      0,
-      0,
       1,
-      0,
-      1
-    ],
-    [
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
       0
     ],
     [
@@ -551,7 +551,7 @@
       0,
       0,
       0,
-      0,
+      1,
       0,
       0,
       0,
@@ -618,8 +618,8 @@
   ],
   "citizensConfig": {
     "enabled": true,
-    "density": 0.25,
-    "updateInterval": 800,
-    "maxGenerations": 1000
+    "density": 0.4,
+    "updateInterval": 600,
+    "maxGenerations": 5000
   }
 }
