@@ -119,8 +119,66 @@ export default function IsometricMaze({ data, tileSize = 32, theme = 'neon', sho
   const appRef = useRef<Application | null>(null)
   const [playerPos, setPlayerPos] = useState(data.start || { x: 1, y: 1 })
   const [citizensState, setCitizensState] = useState<number[][] | null>(data.citizens || null)
+  const [generation, setGeneration] = useState(0)
+  
+  // Auto-enable citizens if data has them
+  const shouldShowCitizens = showCitizens || (data.citizens && data.citizens.some(row => row.some(cell => cell === 1)))
   
   const colors = THEMES[theme] || THEMES.neon
+  
+  // Game of Life simulation - runs every 800ms
+  useEffect(() => {
+    if (!shouldShowCitizens || !citizensState) return
+    
+    const interval = setInterval(() => {
+      setCitizensState(prevGrid => {
+        if (!prevGrid) return null
+        
+        const height = prevGrid.length
+        const width = prevGrid[0]?.length || 0
+        const newGrid: number[][] = []
+        
+        // Apply Conway's Game of Life rules
+        for (let y = 0; y < height; y++) {
+          newGrid[y] = []
+          for (let x = 0; x < width; x++) {
+            // Don't spawn on walls
+            if (data.maze[y]?.[x] === 'WALL') {
+              newGrid[y][x] = 0
+              continue
+            }
+            
+            // Count neighbors (Moore neighborhood)
+            let neighbors = 0
+            for (let dy = -1; dy <= 1; dy++) {
+              for (let dx = -1; dx <= 1; dx++) {
+                if (dx === 0 && dy === 0) continue
+                const ny = (y + dy + height) % height
+                const nx = (x + dx + width) % width
+                neighbors += prevGrid[ny]?.[nx] || 0
+              }
+            }
+            
+            const alive = prevGrid[y][x] === 1
+            
+            if (alive) {
+              // Survives with 2-3 neighbors
+              newGrid[y][x] = (neighbors === 2 || neighbors === 3) ? 1 : 0
+            } else {
+              // Born with exactly 3 neighbors
+              newGrid[y][x] = neighbors === 3 ? 1 : 0
+            }
+          }
+        }
+        
+        return newGrid
+      })
+      
+      setGeneration(g => g + 1)
+    }, 800) // Update every 800ms
+    
+    return () => clearInterval(interval)
+  }, [shouldShowCitizens, data.maze])
   const tileW = tileSize
   const tileH = tileSize / 2
   const wallHeight = tileSize * 0.8
@@ -358,9 +416,15 @@ export default function IsometricMaze({ data, tileSize = 32, theme = 'neon', sho
               graphics.fill()
             }
             
-            // Draw citizen if present (Game of Life)
-            if (showCitizens && citizensState && citizensState[y]?.[x] === 1) {
-              graphics.fill({ color: CITIZEN_COLOR, alpha: 0.7 })
+            // Draw citizen if present (Game of Life) - ANIMATED!
+            if (shouldShowCitizens && citizensState && citizensState[y]?.[x] === 1) {
+              // Pulsing glow effect based on generation
+              const pulse = 0.3 + Math.sin(generation * 0.5 + x + y) * 0.2
+              graphics.fill({ color: CITIZEN_COLOR, alpha: pulse })
+              graphics.circle(screenX, screenY + tileH / 4, tileSize / 3)
+              graphics.fill()
+              // Core
+              graphics.fill({ color: CITIZEN_COLOR, alpha: 0.9 })
               graphics.circle(screenX, screenY + tileH / 4, tileSize / 5)
               graphics.fill()
             }
@@ -394,7 +458,8 @@ export default function IsometricMaze({ data, tileSize = 32, theme = 'neon', sho
         fontSize: 14,
         fill: 0xaaaaaa,
       })
-      const label = new Text({ text: `Theme: ${theme} | WASD to move`, style: labelStyle })
+      const genText = shouldShowCitizens && generation > 0 ? ` | Gen: ${generation}` : ''
+      const label = new Text({ text: `Theme: ${theme} | WASD to move${genText}`, style: labelStyle })
       label.x = 20
       label.y = app.screen.height - 40
       app.stage.addChild(label)
@@ -408,7 +473,7 @@ export default function IsometricMaze({ data, tileSize = 32, theme = 'neon', sho
         appRef.current = null
       }
     }
-  }, [data, colors, theme, tileW, tileH, wallHeight, drawTile, drawPlayer, playerPos, citizensState, showCitizens])
+  }, [data, colors, theme, tileW, tileH, wallHeight, drawTile, drawPlayer, playerPos, citizensState, shouldShowCitizens, generation])
 
   // Keyboard controls
   useEffect(() => {
