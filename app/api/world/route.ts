@@ -437,13 +437,146 @@ export async function GET(request: NextRequest) {
   })
 }
 
+// Zone configurations for zone-based worlds
+const ZONE_CONFIGS: Record<string, { color: string; emoji: string; decorations: string[]; building: string }> = {
+  person: { color: '#ff88cc', emoji: '💖', decorations: ['🌸', '🎀', '📷', '💝'], building: '🏠' },
+  hobby: { color: '#ffdd00', emoji: '⭐', decorations: ['✨', '🎯', '🎨', '🎭'], building: '🏛️' },
+  interest: { color: '#aa00ff', emoji: '💎', decorations: ['💫', '🔮', '📚', '💡'], building: '🗼' },
+  achievement: { color: '#ffd700', emoji: '🏆', decorations: ['🎖️', '🥇', '👑', '⚡'], building: '🏰' },
+  place: { color: '#00ddff', emoji: '🌍', decorations: ['🌴', '⛰️', '🌊', '🏝️'], building: '🗿' },
+  pet: { color: '#88ff88', emoji: '🐾', decorations: ['🦴', '🎾', '🐟', '🌿'], building: '🏡' }
+}
+
+// Generate zone-based world (new format with clickable zones)
+function generateZoneWorld(params: {
+  name: string
+  theme?: string
+  memories: { type: string; name: string; description?: string }[]
+}) {
+  const { name, theme = 'candy', memories } = params
+  const size = 21
+  const center = Math.floor(size / 2)
+  
+  const zones: any[] = []
+  const paths: { x: number; y: number }[] = []
+  const decorations: any[] = []
+  
+  // Place zones in a circle around center
+  const numZones = Math.min(memories.length, 6)
+  const angleStep = (2 * Math.PI) / Math.max(numZones, 1)
+  const zoneRadius = Math.floor(size / 3)
+  
+  memories.slice(0, 6).forEach((memory, i) => {
+    const angle = angleStep * i - Math.PI / 2
+    const zoneX = Math.round(center + Math.cos(angle) * zoneRadius)
+    const zoneY = Math.round(center + Math.sin(angle) * zoneRadius)
+    
+    const config = ZONE_CONFIGS[memory.type] || ZONE_CONFIGS.hobby
+    
+    const zone = {
+      id: `zone-${memory.name.toLowerCase().replace(/\s+/g, '-')}`,
+      name: memory.name,
+      type: memory.type,
+      centerX: zoneX,
+      centerY: zoneY,
+      radius: 3,
+      color: config.color,
+      description: memory.description || `Zona de ${memory.name}`,
+      decorations: [
+        { type: 'building', x: zoneX, y: zoneY, sprite: config.building, scale: 1.2, glow: true },
+        ...config.decorations.slice(0, 4).map((sprite, d) => {
+          const dAngle = (d * Math.PI / 2) + 0.3
+          const dx = Math.round(zoneX + Math.cos(dAngle) * 2)
+          const dy = Math.round(zoneY + Math.sin(dAngle) * 2)
+          return { type: 'object', x: dx, y: dy, sprite, scale: 0.9 }
+        })
+      ]
+    }
+    
+    zones.push(zone)
+    
+    // Create path from center to zone
+    const steps = Math.max(Math.abs(zoneX - center), Math.abs(zoneY - center))
+    for (let s = 0; s <= steps; s++) {
+      const t = s / steps
+      paths.push({
+        x: Math.round(center + (zoneX - center) * t),
+        y: Math.round(center + (zoneY - center) * t)
+      })
+    }
+  })
+  
+  // Add center hub decoration
+  decorations.push({ type: 'building', x: center, y: center, sprite: '🏯', scale: 1.8, glow: true })
+  
+  // Add ambient decorations
+  const ambientSprites = ['🌟', '💠', '✧', '◈', '❋']
+  for (let i = 0; i < 10; i++) {
+    const rx = Math.floor(Math.random() * size)
+    const ry = Math.floor(Math.random() * size)
+    decorations.push({
+      type: 'light',
+      x: rx,
+      y: ry,
+      sprite: ambientSprites[i % ambientSprites.length],
+      scale: 0.5,
+      glow: Math.random() > 0.5
+    })
+  }
+  
+  const memoryNames = memories.map(m => m.name).join(', ')
+  
+  return {
+    name,
+    theme,
+    size,
+    zones,
+    paths,
+    centerHub: { x: center, y: center },
+    decorations,
+    lore: `Un mundo donde ${memoryNames} cobran vida. Cada zona es un fragmento de memoria transformado en realidad digital.`,
+    ambientParticles: 'sparkles',
+    generatedAt: new Date().toISOString()
+  }
+}
+
 /**
  * POST /api/world
  * Generate a world from JSON body
+ * 
+ * For zone-based worlds (new format), pass format: 'zones' and memories array
+ * For maze-based worlds (old format), pass normal params
  */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
+    
+    // Check if requesting zone-based world
+    if (body.format === 'zones' || body.memories) {
+      if (!body.name) {
+        return NextResponse.json({ error: 'name is required' }, { status: 400 })
+      }
+      if (!body.memories || !Array.isArray(body.memories) || body.memories.length === 0) {
+        return NextResponse.json({ error: 'memories array is required' }, { status: 400 })
+      }
+      
+      const world = generateZoneWorld({
+        name: body.name,
+        theme: body.theme || 'candy',
+        memories: body.memories
+      })
+      
+      return NextResponse.json({
+        success: true,
+        world,
+        url: `https://hideseek-agents.vercel.app/world/${body.name.toLowerCase().replace(/\s+/g, '')}`,
+        instructions: 'Save this JSON to public/worlds/[name].json and commit to make it accessible via URL'
+      }, {
+        headers: { 'Cache-Control': 'no-store' }
+      })
+    }
+    
+    // Default: maze-based world
     const world = generateWorld(body)
     
     return NextResponse.json(world, {
