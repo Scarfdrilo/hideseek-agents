@@ -21,6 +21,22 @@ const IsometricMaze = dynamic(() => import('@/components/IsometricMaze'), {
   ),
 })
 
+const WorldView = dynamic(() => import('@/components/WorldView'), {
+  ssr: false,
+  loading: () => (
+    <div style={{ 
+      display: 'flex', 
+      alignItems: 'center', 
+      justifyContent: 'center',
+      height: '60vh',
+      color: '#ff69b4',
+      fontFamily: 'monospace',
+    }}>
+      ✨ Generating world...
+    </div>
+  ),
+})
+
 interface AgentData {
   id: number
   owner: string
@@ -260,7 +276,12 @@ export default function WorldPage() {
       {/* World view */}
       {!error && (
         <div style={{ height: 'calc(100vh - 100px)' }}>
-          <IsometricMaze data={mazeData} theme={theme} tileSize={40} />
+          {/* Use WorldView for zone-based worlds, IsometricMaze for maze-based */}
+          {worldData?.zones ? (
+            <WorldView data={worldData} tileSize={36} />
+          ) : (
+            <IsometricMaze data={mazeData} theme={theme} tileSize={40} />
+          )}
         </div>
       )}
 
