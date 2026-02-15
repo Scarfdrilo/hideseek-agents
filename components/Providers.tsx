@@ -3,7 +3,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { WagmiProvider } from 'wagmi'
 import { ConnectKitProvider, getDefaultConfig } from 'connectkit'
-import { useState, type ReactNode } from 'react'
+import { useState, useEffect, type ReactNode } from 'react'
 import { monad, REOWN_PROJECT_ID } from '@/lib/wagmi'
 import { createConfig, http } from 'wagmi'
 
@@ -21,7 +21,26 @@ const wagmiConfig = createConfig(
 )
 
 export function Providers({ children }: { children: ReactNode }) {
-  const [queryClient] = useState(() => new QueryClient())
+  const [queryClient] = useState(() => new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: 2,
+        retryDelay: 1000,
+        staleTime: 30000,
+      },
+    },
+  }))
+  const [mounted, setMounted] = useState(false)
+
+  // Avoid hydration mismatch - only render wallet providers on client
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // Return children without wallet providers during SSR
+  if (!mounted) {
+    return <>{children}</>
+  }
 
   return (
     <WagmiProvider config={wagmiConfig}>
