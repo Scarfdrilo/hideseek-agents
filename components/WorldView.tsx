@@ -66,12 +66,26 @@ const THEMES: Record<string, {
     glow: 0x00ffaa,
     text: 0x00ff88
   },
+  neon_jungle: {
+    ground: 0x0a1a0a,
+    path: 0x1a3a1a,
+    accent: 0x00ff88,
+    glow: 0x33ff99,
+    text: 0x00ff88
+  },
   forest: {
     ground: 0x1a2d1a,
     path: 0x2d4a2d,
     accent: 0x88ff88,
     glow: 0xaaffaa,
     text: 0xccffcc
+  },
+  swamp: {
+    ground: 0x0d1a0d,
+    path: 0x1a2d1a,
+    accent: 0x33ff99,
+    glow: 0x44ff88,
+    text: 0x33ff99
   },
   cyber: {
     ground: 0x0d0d1a,

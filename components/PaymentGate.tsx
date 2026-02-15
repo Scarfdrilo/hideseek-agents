@@ -60,18 +60,42 @@ export default function PaymentGate({ agentId, worldName, entryFee = '0.003', ch
   const { address, isConnected } = useAccount()
   const [hasAccess, setHasAccess] = useState(false)
   const [isChecking, setIsChecking] = useState(true)
+  const [resolvedAgentId, setResolvedAgentId] = useState<number>(agentId)
   
   // Check if admin
   const isAdmin = address?.toLowerCase() === ADMIN_WALLET
+  
+  // For named worlds (agentId=0), try to find the on-chain agent by name
+  useEffect(() => {
+    const resolveAgentId = async () => {
+      if (agentId === 0 && worldName) {
+        try {
+          const res = await fetch('/api/agents')
+          const data = await res.json()
+          if (data.success && data.agents) {
+            const agent = data.agents.find((a: any) => 
+              a.name.toLowerCase() === worldName.toLowerCase()
+            )
+            if (agent) {
+              setResolvedAgentId(agent.id)
+            }
+          }
+        } catch (e) {
+          console.error('Failed to resolve agent ID:', e)
+        }
+      }
+    }
+    resolveAgentId()
+  }, [agentId, worldName])
   
   // Check access on contract
   const { data: accessData, refetch: refetchAccess } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: CONTRACT_ABI,
     functionName: 'hasAccess',
-    args: address ? [BigInt(agentId), address] : undefined,
+    args: address ? [BigInt(resolvedAgentId), address] : undefined,
     query: {
-      enabled: !!address && agentId >= 0,
+      enabled: !!address && resolvedAgentId > 0,
     }
   })
   
@@ -113,11 +137,15 @@ export default function PaymentGate({ agentId, worldName, entryFee = '0.003', ch
   
   // Handle payment
   const handlePay = () => {
+    if (resolvedAgentId <= 0) {
+      console.error('Cannot pay for agent ID 0 or negative')
+      return
+    }
     writeContract({
       address: CONTRACT_ADDRESS,
       abi: CONTRACT_ABI,
       functionName: 'payEntryFee',
-      args: [BigInt(agentId)],
+      args: [BigInt(resolvedAgentId)],
       value: parseEther(entryFee),
     })
   }
@@ -140,6 +168,30 @@ export default function PaymentGate({ agentId, worldName, entryFee = '0.003', ch
           zIndex: 100,
         }}>
           👑 ADMIN MODE - 0xscarf.eth
+        </div>
+        {children}
+      </div>
+    )
+  }
+  
+  // Preview worlds not on-chain yet (no resolved agent ID) - show free
+  if (resolvedAgentId === 0 && agentId === 0) {
+    return (
+      <div>
+        <div style={{
+          position: 'fixed',
+          top: 70,
+          right: 20,
+          background: 'rgba(0,255,136,0.2)',
+          border: '1px solid #00ff88',
+          borderRadius: 8,
+          padding: '8px 12px',
+          fontSize: 12,
+          fontFamily: 'monospace',
+          color: '#00ff88',
+          zIndex: 100,
+        }}>
+          🎮 PREVIEW MODE - Not on-chain yet
         </div>
         {children}
       </div>
