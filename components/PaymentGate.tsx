@@ -14,19 +14,19 @@ const CONTRACT_ADDRESS = '0x769c418EA0481f45Ea20071186cd00013Ef7eD28'
 // Simplified ABI for the functions we need
 const CONTRACT_ABI = [
   {
-    name: 'payEntryFee',
+    name: 'enterWorld',
     type: 'function',
     stateMutability: 'payable',
-    inputs: [{ name: 'agentId', type: 'uint256' }],
+    inputs: [{ name: 'id', type: 'uint256' }],
     outputs: [],
   },
   {
-    name: 'hasAccess',
+    name: 'hasPaidEntry',
     type: 'function',
     stateMutability: 'view',
     inputs: [
-      { name: 'agentId', type: 'uint256' },
-      { name: 'user', type: 'address' }
+      { name: 'id', type: 'uint256' },
+      { name: 'visitor', type: 'address' }
     ],
     outputs: [{ name: '', type: 'bool' }],
   },
@@ -92,7 +92,7 @@ export default function PaymentGate({ agentId, worldName, entryFee = '0.003', ch
   const { data: accessData, refetch: refetchAccess } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: CONTRACT_ABI,
-    functionName: 'hasAccess',
+    functionName: 'hasPaidEntry',
     args: address ? [BigInt(resolvedAgentId), address] : undefined,
     query: {
       enabled: !!address && resolvedAgentId > 0,
@@ -144,7 +144,7 @@ export default function PaymentGate({ agentId, worldName, entryFee = '0.003', ch
     writeContract({
       address: CONTRACT_ADDRESS,
       abi: CONTRACT_ABI,
-      functionName: 'payEntryFee',
+      functionName: 'enterWorld',
       args: [BigInt(resolvedAgentId)],
       value: parseEther(entryFee),
     })
