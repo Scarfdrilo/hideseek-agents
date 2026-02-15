@@ -192,8 +192,8 @@ export default function Home() {
   }, [])
 
   const handleEnterWorld = (agent: Agent) => {
-    setSelectedAgent(agent)
-    setScreen('playing')
+    // Navigate to the actual world page (with PaymentGate)
+    window.location.href = `/world/${agent.id}`
   }
 
   const handleBack = () => {
