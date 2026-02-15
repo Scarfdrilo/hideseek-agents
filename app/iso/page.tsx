@@ -245,12 +245,12 @@ export default function IsoDemoPage() {
         }}>
           <WorldView data={DEMO_WORLD} tileSize={32} />
           
-          {/* Explanation overlay */}
+          {/* Explanation overlay - RIGHT SIDE */}
           <div style={{
             position: 'absolute',
             bottom: 20,
-            left: 20,
             right: showMemory ? 340 : 20,
+            width: 320,
             background: 'rgba(0,0,0,0.9)',
             border: '1px solid #ff69b4',
             borderRadius: 8,
