@@ -89,9 +89,33 @@ export default function ZoneLabyrinth({ zone, onClose }: ZoneLabyrinthProps) {
   const appRef = useRef<Application | null>(null)
   const [playerPos, setPlayerPos] = useState({ x: 1, y: 1 })
   const mazeRef = useRef<string[][]>([])
-  const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null)
-  const [joystickActive, setJoystickActive] = useState(false)
-  const [joystickDir, setJoystickDir] = useState<{ x: number; y: number }>({ x: 0, y: 0 })
+  // D-pad move function
+  const movePlayer = (dx: number, dy: number) => {
+    const maze = mazeRef.current
+    if (!maze.length) return
+    
+    setPlayerPos(prev => {
+      const newX = prev.x + dx
+      const newY = prev.y + dy
+      
+      // Check bounds and walls
+      if (newY >= 0 && newY < maze.length && 
+          newX >= 0 && newX < maze[0].length &&
+          maze[newY][newX] !== 'WALL') {
+        
+        // Check if reached exit
+        if (maze[newY][newX] === 'EXIT') {
+          setTimeout(() => {
+            alert(`🎉 ¡Completaste el laberinto de ${zone.name}!`)
+            onClose()
+          }, 100)
+        }
+        
+        return { x: newX, y: newY }
+      }
+      return prev
+    })
+  }
   
   const zoneColor = parseInt(zone.color.replace('#', ''), 16)
   const tileSize = 40
@@ -147,43 +171,6 @@ export default function ZoneLabyrinth({ zone, onClose }: ZoneLabyrinthProps) {
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [zone.name, onClose])
-
-  // Handle joystick movement
-  useEffect(() => {
-    if (!joystickActive || (joystickDir.x === 0 && joystickDir.y === 0)) return
-    
-    const interval = setInterval(() => {
-      const maze = mazeRef.current
-      if (!maze.length) return
-      
-      const dx = joystickDir.x > 0.3 ? 1 : joystickDir.x < -0.3 ? -1 : 0
-      const dy = joystickDir.y > 0.3 ? 1 : joystickDir.y < -0.3 ? -1 : 0
-      
-      if (dx !== 0 || dy !== 0) {
-        setPlayerPos(prev => {
-          const newX = prev.x + dx
-          const newY = prev.y + dy
-          
-          if (newY >= 0 && newY < maze.length && 
-              newX >= 0 && newX < maze[0].length &&
-              maze[newY][newX] !== 'WALL') {
-            
-            if (maze[newY][newX] === 'EXIT') {
-              setTimeout(() => {
-                alert(`🎉 ¡Completaste el laberinto de ${zone.name}!`)
-                onClose()
-              }, 100)
-            }
-            
-            return { x: newX, y: newY }
-          }
-          return prev
-        })
-      }
-    }, 150)
-    
-    return () => clearInterval(interval)
-  }, [joystickActive, joystickDir, zone.name, onClose])
 
   // Render the labyrinth
   useEffect(() => {
@@ -338,36 +325,6 @@ export default function ZoneLabyrinth({ zone, onClose }: ZoneLabyrinthProps) {
     }
   }, [zone, zoneColor, playerPos, tileSize])
 
-  // Joystick handlers - Fixed for Safari iOS
-  const handleJoystickStart = (e: React.TouchEvent) => {
-    e.preventDefault() // Prevent scroll on Safari
-    e.stopPropagation()
-    const touch = e.touches[0]
-    setTouchStart({ x: touch.clientX, y: touch.clientY })
-    setJoystickActive(true)
-  }
-
-  const handleJoystickMove = (e: React.TouchEvent) => {
-    e.preventDefault() // Prevent scroll on Safari
-    e.stopPropagation()
-    if (!touchStart) return
-    const touch = e.touches[0]
-    const dx = (touch.clientX - touchStart.x) / 50
-    const dy = (touch.clientY - touchStart.y) / 50
-    setJoystickDir({ 
-      x: Math.max(-1, Math.min(1, dx)), 
-      y: Math.max(-1, Math.min(1, dy)) 
-    })
-  }
-
-  const handleJoystickEnd = (e: React.TouchEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setTouchStart(null)
-    setJoystickActive(false)
-    setJoystickDir({ x: 0, y: 0 })
-  }
-
   return (
     <div style={{
       position: 'fixed',
@@ -442,48 +399,114 @@ export default function ZoneLabyrinth({ zone, onClose }: ZoneLabyrinthProps) {
         }}
       />
 
-      {/* Mobile Joystick - Safari iOS compatible */}
+      {/* Mobile D-Pad */}
       <div
         style={{
           position: 'absolute',
-          bottom: '80px',
-          left: '40px',
-          width: '120px',
-          height: '120px',
-          borderRadius: '50%',
-          background: 'rgba(255,255,255,0.15)',
-          border: `3px solid ${zone.color}`,
+          bottom: '60px',
+          left: '30px',
+          width: '140px',
+          height: '140px',
           touchAction: 'none',
           WebkitTouchCallout: 'none',
           WebkitUserSelect: 'none',
           userSelect: 'none',
-          WebkitTapHighlightColor: 'transparent',
         }}
-        onTouchStart={handleJoystickStart}
-        onTouchMove={handleJoystickMove}
-        onTouchEnd={handleJoystickEnd}
-        onTouchCancel={handleJoystickEnd}
       >
-        {/* Joystick knob */}
-        <div
+        {/* UP */}
+        <button
+          onTouchStart={(e) => { e.preventDefault(); movePlayer(0, -1); }}
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: '50px',
+            height: '50px',
+            borderRadius: '8px',
+            background: zone.color,
+            border: 'none',
+            fontSize: '24px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          ▲
+        </button>
+        
+        {/* DOWN */}
+        <button
+          onTouchStart={(e) => { e.preventDefault(); movePlayer(0, 1); }}
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: '50px',
+            height: '50px',
+            borderRadius: '8px',
+            background: zone.color,
+            border: 'none',
+            fontSize: '24px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          ▼
+        </button>
+        
+        {/* LEFT */}
+        <button
+          onTouchStart={(e) => { e.preventDefault(); movePlayer(-1, 0); }}
           style={{
             position: 'absolute',
             top: '50%',
-            left: '50%',
-            width: '60px',
-            height: '60px',
-            borderRadius: '50%',
+            left: 0,
+            transform: 'translateY(-50%)',
+            width: '50px',
+            height: '50px',
+            borderRadius: '8px',
             background: zone.color,
-            boxShadow: `0 0 20px ${zone.color}`,
-            transform: `translate(${-30 + joystickDir.x * 25}px, ${-30 + joystickDir.y * 25}px)`,
-            opacity: joystickActive ? 1 : 0.6,
-            transition: joystickActive ? 'none' : 'transform 0.2s',
-            pointerEvents: 'none',
+            border: 'none',
+            fontSize: '24px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
-        />
+        >
+          ◀
+        </button>
+        
+        {/* RIGHT */}
+        <button
+          onTouchStart={(e) => { e.preventDefault(); movePlayer(1, 0); }}
+          style={{
+            position: 'absolute',
+            top: '50%',
+            right: 0,
+            transform: 'translateY(-50%)',
+            width: '50px',
+            height: '50px',
+            borderRadius: '8px',
+            background: zone.color,
+            border: 'none',
+            fontSize: '24px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          ▶
+        </button>
       </div>
 
-      {/* Mobile direction hints */}
+      {/* Mobile hint */}
       <div style={{
         position: 'absolute',
         bottom: '20px',
@@ -494,7 +517,7 @@ export default function ZoneLabyrinth({ zone, onClose }: ZoneLabyrinthProps) {
         fontSize: '12px',
         fontFamily: 'monospace',
       }}>
-        📱 Arrastra el joystick para moverte
+        📱 Usa el D-pad para moverte
       </div>
     </div>
   )
