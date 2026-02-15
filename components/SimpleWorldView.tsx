@@ -28,8 +28,10 @@ interface SimpleWorldViewProps {
 // Simple CSS-based world view (no WebGL)
 export default function SimpleWorldView({ data }: SimpleWorldViewProps) {
   const [selectedZone, setSelectedZone] = useState<Zone | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
-  if (!data || !data.zones) {
+  // Defensive checks
+  if (!data) {
     return (
       <div style={{ 
         display: 'flex', 
@@ -38,7 +40,48 @@ export default function SimpleWorldView({ data }: SimpleWorldViewProps) {
         height: '100%',
         color: '#ff4444',
       }}>
-        ⚠️ No world data
+        ⚠️ No world data provided
+      </div>
+    )
+  }
+
+  if (!data.zones || !Array.isArray(data.zones)) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        flexDirection: 'column',
+        alignItems: 'center', 
+        justifyContent: 'center',
+        height: '100%',
+        color: '#ffaa00',
+        fontFamily: 'monospace',
+        padding: 20,
+      }}>
+        <div style={{ fontSize: 48, marginBottom: 16 }}>🌍</div>
+        <div>World: {data.name || 'Unknown'}</div>
+        <div style={{ fontSize: 12, color: '#666', marginTop: 8 }}>
+          No zones defined yet
+        </div>
+      </div>
+    )
+  }
+
+  if (data.zones.length === 0) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        flexDirection: 'column',
+        alignItems: 'center', 
+        justifyContent: 'center',
+        height: '100%',
+        color: '#ffaa00',
+        fontFamily: 'monospace',
+      }}>
+        <div style={{ fontSize: 48, marginBottom: 16 }}>🏗️</div>
+        <div>{data.name}&apos;s World</div>
+        <div style={{ fontSize: 12, color: '#666', marginTop: 8 }}>
+          World is empty - no zones created
+        </div>
       </div>
     )
   }
@@ -95,20 +138,27 @@ export default function SimpleWorldView({ data }: SimpleWorldViewProps) {
         maxWidth: 1200,
         margin: '0 auto',
       }}>
-        {data.zones.map((zone) => (
+        {data.zones.map((zone, index) => {
+          // Skip malformed zones
+          if (!zone || !zone.id) {
+            console.warn('Skipping malformed zone at index', index)
+            return null
+          }
+          const zoneColor = zone.color || '#00ff88'
+          return (
           <div
-            key={zone.id}
+            key={zone.id || `zone-${index}`}
             onClick={() => setSelectedZone(zone)}
             style={{
-              background: `linear-gradient(135deg, ${zone.color}22 0%, ${zone.color}44 100%)`,
-              border: `2px solid ${zone.color}`,
+              background: `linear-gradient(135deg, ${zoneColor}22 0%, ${zoneColor}44 100%)`,
+              border: `2px solid ${zoneColor}`,
               borderRadius: 12,
               padding: 20,
               cursor: 'pointer',
               transition: 'all 0.3s ease',
               transform: selectedZone?.id === zone.id ? 'scale(1.02)' : 'scale(1)',
               boxShadow: selectedZone?.id === zone.id 
-                ? `0 0 30px ${zone.color}66` 
+                ? `0 0 30px ${zoneColor}66` 
                 : 'none',
             }}
           >
@@ -117,21 +167,21 @@ export default function SimpleWorldView({ data }: SimpleWorldViewProps) {
               marginBottom: 10,
               textAlign: 'center',
             }}>
-              {zone.type === 'person' && '💖'}
-              {zone.type === 'hobby' && '⭐'}
-              {zone.type === 'interest' && '💎'}
-              {zone.type === 'achievement' && '🏆'}
-              {zone.type === 'place' && '🌍'}
-              {zone.type === 'pet' && '🐾'}
+              {zone.type === 'person' ? '💖' :
+               zone.type === 'hobby' ? '⭐' :
+               zone.type === 'interest' ? '💎' :
+               zone.type === 'achievement' ? '🏆' :
+               zone.type === 'place' ? '🌍' :
+               zone.type === 'pet' ? '🐾' : '🔮'}
             </div>
             
             <h3 style={{ 
-              color: zone.color, 
+              color: zoneColor, 
               margin: '0 0 8px 0',
               fontSize: 18,
               textAlign: 'center',
             }}>
-              {zone.name}
+              {zone.name || 'Unknown Zone'}
             </h3>
             
             {zone.description && (
@@ -155,28 +205,30 @@ export default function SimpleWorldView({ data }: SimpleWorldViewProps) {
               color: '#666',
               textTransform: 'uppercase',
             }}>
-              {zone.type}
+              {zone.type || 'zone'}
             </div>
           </div>
-        ))}
+        )})}  {/* Close return + map */}
       </div>
 
       {/* Selected Zone Detail */}
-      {selectedZone && (
+      {selectedZone && (() => {
+        const selColor = selectedZone.color || '#00ff88'
+        return (
         <div style={{
           position: 'fixed',
           bottom: 20,
           left: '50%',
           transform: 'translateX(-50%)',
           background: 'rgba(0,0,0,0.95)',
-          border: `2px solid ${selectedZone.color}`,
+          border: `2px solid ${selColor}`,
           borderRadius: 12,
           padding: 20,
           maxWidth: 400,
           textAlign: 'center',
         }}>
-          <h3 style={{ color: selectedZone.color, margin: '0 0 8px 0' }}>
-            🎮 {selectedZone.name}
+          <h3 style={{ color: selColor, margin: '0 0 8px 0' }}>
+            🎮 {selectedZone.name || 'Zone'}
           </h3>
           <p style={{ color: '#888', margin: 0, fontSize: 14 }}>
             {selectedZone.description || 'Explora esta zona del mundo'}
@@ -186,7 +238,7 @@ export default function SimpleWorldView({ data }: SimpleWorldViewProps) {
             style={{
               marginTop: 12,
               padding: '8px 20px',
-              background: selectedZone.color,
+              background: selColor,
               color: '#000',
               border: 'none',
               borderRadius: 6,
@@ -197,7 +249,7 @@ export default function SimpleWorldView({ data }: SimpleWorldViewProps) {
             Cerrar
           </button>
         </div>
-      )}
+      )})()}
     </div>
   )
 }
