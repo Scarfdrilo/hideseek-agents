@@ -169,26 +169,48 @@ export default function WorldPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // 🧠 INTENSAMENTE: Try real-time API first (in-memory worlds)
+        // For numeric IDs, first get the agent name from contract, then fetch world by name
+        let worldName = id
+        let foundAgentData: AgentData | null = null
+        
+        if (isNumericId) {
+          // Get agent info from contract first
+          const agentsRes = await fetch('/api/agents')
+          const agentsData = await agentsRes.json()
+          if (agentsData.success && agentsData.agents) {
+            const agent = agentsData.agents.find((a: AgentData) => a.id === agentId)
+            if (agent) {
+              worldName = agent.name.toLowerCase()
+              foundAgentData = agent
+            }
+          }
+        }
+        
+        // 🧠 INTENSAMENTE: Try real-time API with resolved world name
         const apiRes = await fetch('/api/world', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'get', name: id })
+          body: JSON.stringify({ action: 'get', name: worldName })
         })
         
         if (apiRes.ok) {
           const apiData = await apiRes.json()
           if (apiData.success && apiData.world) {
             setWorldData(apiData.world)
-            setAgent({
-              id: 0,
-              owner: '0x0000000000000000000000000000000000000000',
-              name: apiData.world.name,
-              entryFeeFormatted: '0.003 MON',
-              totalVisits: 0,
-              totalEarnedFormatted: '0 MON',
-              isActive: true,
-            })
+            // Use contract agent data if available, otherwise use world data
+            if (foundAgentData) {
+              setAgent(foundAgentData)
+            } else {
+              setAgent({
+                id: 0,
+                owner: '0x0000000000000000000000000000000000000000',
+                name: apiData.world.name,
+                entryFeeFormatted: '0.003 MON',
+                totalVisits: 0,
+                totalEarnedFormatted: '0 MON',
+                isActive: true,
+              })
+            }
             setLoading(false)
             return
           }
@@ -221,7 +243,14 @@ export default function WorldPage() {
           return
         }
         
-        // Fallback to API for on-chain agents (only for numeric IDs)
+        // Fallback: use agent data without world (shows default maze)
+        if (foundAgentData) {
+          setAgent(foundAgentData)
+          setLoading(false)
+          return
+        }
+        
+        // Last resort: fetch agents again
         const res = await fetch('/api/agents')
         const data = await res.json()
         
