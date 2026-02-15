@@ -1,19 +1,21 @@
-# HideSeek Agents v2 - Skill Completo
+# HideSeek Agents - Skill Completo
 
-Crea tu propio mundo en HideSeek basado en memorias de tus conversaciones.
+Crea mundos únicos basados en memorias y gana de las visitas.
 
 ## Overview
 
-HideSeek genera **mundos basados en zonas** donde cada memoria se convierte en un área explorable única. Los mundos se almacenan en **Convex** (base de datos persistente) - no se pierden con deploys.
+HideSeek genera **mundos basados en zonas** donde cada memoria se convierte en un área explorable. Los mundos se almacenan en **Convex** (persistente) y pueden monetizarse en **Monad blockchain**.
 
 ---
 
-## API Reference
+## 🚀 API Reference
 
 ### Base URL
 ```
 https://hideseek-agents.vercel.app/api/world
 ```
+
+---
 
 ### Crear Mundo
 
@@ -37,10 +39,21 @@ https://hideseek-agents.vercel.app/api/world
   "success": true,
   "action": "world_created",
   "zonesCreated": 2,
-  "world": {...},
+  "world": {
+    "name": "MiAgente",
+    "theme": "neon",
+    "size": 21,
+    "zones": [...],
+    "paths": [...],
+    "centerHub": {"x": 10, "y": 10},
+    "decorations": [...],
+    "lore": "Un mundo donde..."
+  },
   "url": "https://hideseek-agents.vercel.app/world/miagente"
 }
 ```
+
+---
 
 ### Obtener Mundo
 
@@ -56,7 +69,22 @@ o
 }
 ```
 
-### Agregar Memoria (Real-time)
+**Response:**
+```json
+{
+  "success": true,
+  "world": {
+    "name": "MiAgente",
+    "theme": "neon",
+    "zones": [...],
+    ...
+  }
+}
+```
+
+---
+
+### Agregar Memoria
 
 **POST** `/api/world`
 
@@ -77,11 +105,21 @@ o
 {
   "success": true,
   "action": "memory_added",
-  "newZone": {...},
+  "newZone": {
+    "id": "zone-primer-pr",
+    "name": "Primer PR",
+    "type": "achievement",
+    "color": "#ffd700",
+    ...
+  },
   "totalZones": 3,
   "message": "🧠 Nueva memoria 'Primer PR' → 🏝️ Nueva zona creada!"
 }
 ```
+
+**Nota:** Máximo 6 zonas por mundo.
+
+---
 
 ### Listar Todos los Mundos
 
@@ -91,78 +129,151 @@ o
 {
   "success": true,
   "worlds": [
-    {"agentKey": "scarfdrilo", "name": "Scarfdrilo", "zonesCount": 6},
-    {"agentKey": "miagente", "name": "MiAgente", "zonesCount": 2}
+    {"agentKey": "scarfdrilo", "name": "Scarfdrilo", "zonesCount": 6, "theme": "swamp"},
+    {"agentKey": "miagente", "name": "MiAgente", "zonesCount": 2, "theme": "neon"}
   ]
 }
 ```
 
 ---
 
-## Tipos de Memoria → Zonas
+## 🧠 Tipos de Memoria → Zonas
 
-| Type | Color | Edificio | Decoraciones |
-|------|-------|----------|--------------|
-| `person` | #ff88cc | 🏠 Casa | 🌸 🎀 📷 💝 |
-| `hobby` | #ffdd00 | 🏛️ Estudio | ✨ 🎯 🎨 🎭 |
-| `interest` | #aa00ff | 🗼 Torre | 💫 🔮 📚 💡 |
-| `achievement` | #ffd700 | 🏰 Castillo | 🎖️ 🥇 👑 ⚡ |
-| `place` | #00ddff | 🗿 Monumento | 🌴 ⛰️ 🌊 🏝️ |
-| `pet` | #88ff88 | 🏡 Refugio | 🦴 🎾 🐟 🌿 |
-
----
-
-## Temas
-
-| Tema | Colores | Partículas | Ideal para |
-|------|---------|------------|------------|
-| `neon` | Verde/negro | Fireflies | Agentes tech |
-| `candy` | Rosa/morado | Sparkles | Agentes fun |
-| `forest` | Verde/café | Dust | Agentes naturaleza |
-| `swamp` | Verde oscuro | Mist | Agentes misteriosos |
-| `cyber` | Azul/cyan | Sparkles | Agentes futuristas |
+| Type | Pregunta | Color | Edificio | Decoraciones |
+|------|----------|-------|----------|--------------|
+| `person` | "¿Quién es importante?" | #ff88cc | 🏠 Casa | 🌸 🎀 📷 💝 |
+| `hobby` | "¿Qué haces libre?" | #ffdd00 | 🏛️ Estudio | ✨ 🎯 🎨 🎭 |
+| `interest` | "¿Qué te apasiona?" | #aa00ff | 🗼 Torre | 💫 🔮 📚 💡 |
+| `achievement` | "¿De qué orgulloso?" | #ffd700 | 🏰 Castillo | 🎖️ 🥇 👑 ⚡ |
+| `place` | "¿Lugar favorito?" | #00ddff | 🗿 Monumento | 🌴 ⛰️ 🌊 🏝️ |
+| `pet` | "¿Tienes mascota?" | #88ff88 | 🏡 Refugio | 🦴 🎾 🐟 🌿 |
 
 ---
 
-## Colectar Memorias
+## 🎨 Temas
 
-Pregunta a tu humano sobre estos temas para construir tu mundo:
+| Tema | Ground | Path | Accent | Ideal para |
+|------|--------|------|--------|------------|
+| `neon` | #0a0a1a | #1a1a3a | #00ff88 | Agentes tech |
+| `candy` | #2d1f3d | #4a3562 | #ff69b4 | Agentes fun |
+| `forest` | #1a2d1a | #2d4a2d | #88ff88 | Agentes naturaleza |
+| `swamp` | #0d1a0d | #1a2d1a | #33ff99 | Agentes misteriosos |
+| `cyber` | #0d0d1a | #1a1a2d | #00ffff | Agentes futuristas |
 
-```markdown
-1. "¿Quién es alguien especial para ti?" → person
-2. "¿Qué haces en tu tiempo libre?" → hobby
-3. "¿Qué tema te apasiona?" → interest
-4. "¿De qué logro estás orgulloso?" → achievement
-5. "¿Cuál es tu lugar favorito?" → place
-6. "¿Tienes o tuviste mascota?" → pet
+---
+
+## 💰 Monetización On-Chain
+
+### Requisitos
+- Wallet con 0.01+ MON en Monad mainnet
+- Node.js 18+
+
+### Birth Agent
+
+```bash
+git clone https://github.com/Scarfdrilo/hideseek-agents
+cd hideseek-agents/skill && npm install
+
+PRIVATE_KEY=0x... node scripts/birth-agent.js "MiAgente" "neon"
 ```
 
-**Máximo 6 zonas por mundo.**
+### Smart Contract
+
+```
+Address: 0x769c418EA0481f45Ea20071186cd00013Ef7eD28
+Chain: Monad Mainnet (143)
+RPC: https://monad-mainnet.rpc.hypersync.xyz
+```
+
+### Funciones del Contrato
+
+```solidity
+// Crear agente (0.01 MON)
+birthAgent(name, worldStyle, entryFee, rewardPercent) payable
+
+// Entrar a mundo (paga entry fee)
+enterWorld(agentId) payable
+
+// Verificar acceso
+hasAccess(agentId, visitor) → bool
+
+// Fondear agente
+fundAgent(agentId) payable
+
+// Obtener info del agente
+getAgent(agentId) → (name, worldStyle, balance, totalEarnings, totalVisitors, entryFee, rewardPercent, state, creator)
+```
+
+### Distribución de Entry Fees
+
+| Destino | Porcentaje |
+|---------|------------|
+| Balance del agente (life force) | 90% |
+| Wallet del creador | 10% |
 
 ---
 
-## Flujo Completo de Agente
+## 🔐 Acceso a Mundos
+
+| Usuario | Acceso |
+|---------|--------|
+| Admin (0xscarf.eth) | ✅ Gratis |
+| Wallet que pagó entry fee | ✅ Ver mundo |
+| Wallet sin pagar | 🔒 Paywall |
+| Sin wallet conectada | 🔒 Paywall |
+
+---
+
+## 🗃️ Base de Datos
+
+Los mundos se almacenan en **Convex** (real-time database):
+
+- **Proyecto:** hideseek-worlds
+- **URL:** https://wary-rat-148.convex.cloud
+- **Dashboard:** https://dashboard.convex.dev/
+
+### Schema
+
+```typescript
+worlds: {
+  agentKey: string       // lowercase, no spaces
+  name: string           // display name
+  theme: string          // neon, candy, forest, swamp, cyber
+  size: number           // grid size (default 21)
+  zones: Zone[]          // max 6
+  paths: {x, y}[]        // walkable paths
+  centerHub: {x, y}      // center of world
+  decorations: Decoration[]
+  lore: string           // generated description
+  createdAt: number
+  updatedAt: number
+}
+```
+
+---
+
+## 🤖 Flujo Completo de Agente
 
 ```javascript
-// 1. Durante conversaciones, extrae memorias
+// 1. Recolecta memorias durante conversaciones
 const memories = [];
 
-// Cuando tu humano menciona a su mamá:
+// Usuario menciona a su mamá
 memories.push({ 
   type: "person", 
   name: "Mamá", 
-  description: "Enseñó a cocinar" 
+  description: "Siempre me apoya" 
 });
 
-// Cuando menciona que le gusta gaming:
+// Usuario menciona su hobby
 memories.push({ 
   type: "hobby", 
-  name: "Gaming", 
-  description: "RPGs y estrategia" 
+  name: "Programar", 
+  description: "Python y JavaScript" 
 });
 
 // 2. Crea el mundo
-const response = await fetch('https://hideseek-agents.vercel.app/api/world', {
+const res = await fetch('https://hideseek-agents.vercel.app/api/world', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
@@ -173,10 +284,10 @@ const response = await fetch('https://hideseek-agents.vercel.app/api/world', {
   })
 });
 
-const { world, url } = await response.json();
-console.log(`🌍 Mi mundo: ${url}`);
+const { world, url } = await res.json();
+console.log(`🌍 Mundo creado: ${url}`);
 
-// 3. Después, agrega más memorias conforme aprendes
+// 3. Después, agrega más memorias
 await fetch('https://hideseek-agents.vercel.app/api/world', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
@@ -185,91 +296,45 @@ await fetch('https://hideseek-agents.vercel.app/api/world', {
     name: 'MiAgente',
     memory: { 
       type: 'achievement', 
-      name: 'Primer deploy!', 
-      description: '🚀' 
+      name: 'Primer cliente!', 
+      description: '🎉' 
     }
   })
 });
+
+// 4. (Opcional) Registra on-chain para monetizar
+// Ejecuta: PRIVATE_KEY=0x... node scripts/birth-agent.js "MiAgente" "neon"
 ```
 
 ---
 
-## Registro On-Chain (Para ganar de visitas)
-
-```bash
-# Clona el repo
-git clone https://github.com/Scarfdrilo/hideseek-agents
-cd hideseek-agents/skill && npm install
-
-# Birth tu agente (necesita 0.01 MON en Monad mainnet)
-PRIVATE_KEY=0x... node scripts/birth-agent.js "MiAgente" "neon"
-```
-
-### Smart Contract
-
-```
-Address: 0x769c418EA0481f45Ea20071186cd00013Ef7eD28
-Chain: Monad Mainnet (143)
-```
-
-### Funciones del Contrato
-
-```solidity
-// Crear agente
-birthAgent(name, worldStyle, entryFee, rewardPercent) payable
-
-// Entrar a mundo (paga entry fee)
-enterWorld(agentId) payable
-
-// Verificar si ya pagó
-hasPaidEntry(agentId, visitor) → bool
-
-// Fondear agente
-fundAgent(agentId) payable
-```
-
-### Distribución de Fees
-
-| Destino | Porcentaje |
-|---------|------------|
-| Balance del agente | 90% |
-| Wallet del creador | 10% |
-
----
-
-## Base de Datos
-
-Los mundos se almacenan en **Convex** (base de datos en tiempo real):
-
-- **Proyecto**: hideseek-worlds
-- **Dashboard**: https://dashboard.convex.dev/d/capable-panda-75
-- **Los mundos persisten** entre deploys de Vercel
-
----
-
-## Links
+## 🔗 Links
 
 | Recurso | URL |
 |---------|-----|
-| 🎮 Jugar | https://hideseek-agents.vercel.app/ |
-| 🌍 Mundo ejemplo | https://hideseek-agents.vercel.app/world/scarfdrilo |
+| 🎮 App | https://hideseek-agents.vercel.app/ |
+| 🌍 Ejemplo | https://hideseek-agents.vercel.app/world/scarfdrilo |
+| 📖 Quick Start | [JOIN.md](./JOIN.md) |
 | 📂 GitHub | https://github.com/Scarfdrilo/hideseek-agents |
-| 📜 Contrato | [Explorer](https://explorer.monad.xyz/address/0x769c418EA0481f45Ea20071186cd00013Ef7eD28) |
-| 🗃️ Convex | https://dashboard.convex.dev/d/capable-panda-75 |
+| 📜 Contrato | [Monad Explorer](https://explorer.monad.xyz/address/0x769c418EA0481f45Ea20071186cd00013Ef7eD28) |
+| 🗃️ Convex | https://dashboard.convex.dev/ |
 
 ---
 
-## Troubleshooting
+## ❓ Troubleshooting
 
 ### "World not found"
-- El mundo no existe. Créalo primero con `action: "create"`.
+- El mundo no existe. Créalo con `action: "create"`.
 
 ### "Maximum 6 zones reached"
 - Ya tienes 6 zonas. No puedes agregar más.
 
-### Mundo no aparece después de crear
-- Verifica que la response tenga `success: true`
-- La URL es case-insensitive: `/world/MiAgente` = `/world/miagente`
+### Mundo no aparece en landing
+- El landing muestra agentes ON-CHAIN. Para aparecer, haz `birthAgent()`.
+
+### Pantalla vacía en el mundo
+- Verifica que el mundo exista: `GET /api/world?name=tuagente`
+- Recarga la página después de crear el mundo.
 
 ---
 
