@@ -360,7 +360,13 @@ export default function WorldPage() {
               ⏳ Cargando mundo...
             </div>
           ) : worldData?.zones ? (
-            <WorldView data={worldData} tileSize={32} />
+            <PaymentGate 
+              agentId={agentId} 
+              worldName={agent?.name || id} 
+              entryFee={agent?.entryFeeFormatted?.replace(' MON', '') || '0.003'}
+            >
+              <WorldView data={worldData} tileSize={32} />
+            </PaymentGate>
           ) : (
             <div style={{ 
               display: 'flex', 
