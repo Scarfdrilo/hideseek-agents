@@ -5,6 +5,8 @@ import { useParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 
+const PaymentGate = dynamic(() => import('@/components/PaymentGate'), { ssr: false })
+
 const IsometricMaze = dynamic(() => import('@/components/IsometricMaze'), {
   ssr: false,
   loading: () => (
@@ -298,16 +300,22 @@ export default function WorldPage() {
         </div>
       )}
 
-      {/* World view */}
+      {/* World view - wrapped in PaymentGate */}
       {!error && (
-        <div style={{ height: 'calc(100vh - 100px)' }}>
-          {/* Use WorldView for zone-based worlds, IsometricMaze for maze-based */}
-          {worldData?.zones ? (
-            <WorldView data={worldData} tileSize={36} />
-          ) : (
-            <IsometricMaze data={mazeData} theme={theme} tileSize={40} />
-          )}
-        </div>
+        <PaymentGate 
+          agentId={agentId} 
+          worldName={agent?.name || worldData?.name || 'Unknown'}
+          entryFee={agent?.entryFeeFormatted?.replace(' MON', '') || '0.003'}
+        >
+          <div style={{ height: 'calc(100vh - 100px)' }}>
+            {/* Use WorldView for zone-based worlds, IsometricMaze for maze-based */}
+            {worldData?.zones ? (
+              <WorldView data={worldData} tileSize={36} />
+            ) : (
+              <IsometricMaze data={mazeData} theme={theme} tileSize={40} />
+            )}
+          </div>
+        </PaymentGate>
       )}
 
       {/* Agent info panel */}
