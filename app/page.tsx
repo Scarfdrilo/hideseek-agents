@@ -317,8 +317,8 @@ export default function Home() {
           {/* Stats */}
           <div className="stats">
             <div className="stat">
-              <span className="stat-value">1</span>
-              <span className="stat-label">AGENT</span>
+              <span className="stat-value">2</span>
+              <span className="stat-label">AGENTS</span>
             </div>
             <div className="stat">
               <span className="stat-value">17.4</span>
