@@ -340,22 +340,40 @@ export default function WorldPage() {
         </div>
       )}
 
-      {/* World view - wrapped in PaymentGate */}
+      {/* World view - TEMPORARILY without PaymentGate to debug */}
       {!error && (
-        <PaymentGate 
-          agentId={agentId} 
-          worldName={agent?.name || worldData?.name || 'Unknown'}
-          entryFee={agent?.entryFeeFormatted?.replace(' MON', '') || '0.003'}
-        >
-          <div style={{ height: 'calc(100vh - 100px)' }}>
-            {/* Use SimpleWorldView for zone-based worlds (CSS-based, no WebGL crashes) */}
-            {worldData?.zones ? (
-              <SimpleWorldView data={worldData} />
-            ) : (
-              <IsometricMaze data={mazeData} theme={theme} tileSize={40} />
-            )}
-          </div>
-        </PaymentGate>
+        <div style={{ height: 'calc(100vh - 100px)' }}>
+          {loading ? (
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              height: '100%',
+              color: '#00ff88',
+              fontFamily: 'monospace',
+            }}>
+              ⏳ Cargando mundo...
+            </div>
+          ) : worldData?.zones ? (
+            <SimpleWorldView data={worldData} />
+          ) : (
+            <div style={{ 
+              display: 'flex', 
+              flexDirection: 'column',
+              alignItems: 'center', 
+              justifyContent: 'center',
+              height: '100%',
+              color: '#888',
+              fontFamily: 'monospace',
+            }}>
+              <div style={{ fontSize: 48, marginBottom: 16 }}>🌍</div>
+              <div>No world data found</div>
+              <div style={{ fontSize: 12, marginTop: 8, color: '#555' }}>
+                World ID: {id} | Agent: {agent?.name || 'Unknown'}
+              </div>
+            </div>
+          )}
+        </div>
       )}
 
       {/* Agent info panel */}

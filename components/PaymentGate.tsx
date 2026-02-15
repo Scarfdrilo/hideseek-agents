@@ -60,10 +60,11 @@ export default function PaymentGate({ agentId, worldName, entryFee = '0.003', ch
   const { address, isConnected } = useAccount()
   const [hasAccess, setHasAccess] = useState(false)
   const [isChecking, setIsChecking] = useState(true)
-  const [resolvedAgentId, setResolvedAgentId] = useState<number>(agentId)
+  const [resolvedAgentId, setResolvedAgentId] = useState<number>(agentId || 0)
+  const [clientError, setClientError] = useState<string | null>(null)
   
-  // Check if admin
-  const isAdmin = address?.toLowerCase() === ADMIN_WALLET
+  // Check if admin (safely)
+  const isAdmin = address ? address.toLowerCase() === ADMIN_WALLET : false
   
   // For named worlds (agentId=0), try to find the on-chain agent by name
   useEffect(() => {
