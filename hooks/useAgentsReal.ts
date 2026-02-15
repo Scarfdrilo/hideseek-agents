@@ -130,7 +130,7 @@ export function useHasPaidEntry(agentId: number) {
 // Enter world (pay entry fee - or free if already paid)
 export function useEnterWorld() {
   const { address } = useAccount()
-  const { writeContract, data: hash, isPending, error } = useWriteContract()
+  const { writeContract, data: hash, isPending, error, reset } = useWriteContract()
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash })
 
   const enterWorld = async (agentId: number, entryFee: number, alreadyPaid: boolean = false) => {
@@ -158,6 +158,7 @@ export function useEnterWorld() {
     isSuccess,
     error,
     hash,
+    reset,
   }
 }
 
