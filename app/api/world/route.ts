@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { kv } from '@vercel/kv'
 
 // Memory element types for personalized worlds
 interface MemoryElement {
@@ -540,8 +541,29 @@ function generateZoneWorld(params: {
   }
 }
 
-// In-memory world storage (for real-time updates - resets on deploy)
-const worldStorage: Map<string, any> = new Map()
+// World storage - uses Vercel KV for persistence, falls back to memory
+const memoryStorage: Map<string, any> = new Map()
+
+async function getWorld(key: string): Promise<any | null> {
+  try {
+    // Try Vercel KV first
+    const world = await kv.get(`world:${key}`)
+    if (world) return world
+  } catch (e) {
+    // KV not configured, use memory
+  }
+  return memoryStorage.get(key) || null
+}
+
+async function setWorld(key: string, world: any): Promise<void> {
+  try {
+    // Try Vercel KV first
+    await kv.set(`world:${key}`, world)
+  } catch (e) {
+    // KV not configured, use memory
+  }
+  memoryStorage.set(key, world)
+}
 
 /**
  * POST /api/world
@@ -572,7 +594,7 @@ export async function POST(request: NextRequest) {
       }
       
       // Get or create world
-      let existingWorld = worldStorage.get(agentKey)
+      let existingWorld = await getWorld(agentKey)
       let memories: any[] = []
       
       if (existingWorld) {
@@ -602,8 +624,8 @@ export async function POST(request: NextRequest) {
         memories
       })
       
-      // Store updated world
-      worldStorage.set(agentKey, updatedWorld)
+      // Store updated world (persisted to Vercel KV)
+      await setWorld(agentKey, updatedWorld)
       
       return NextResponse.json({
         success: true,
@@ -620,7 +642,7 @@ export async function POST(request: NextRequest) {
     
     // Get current world state
     if (body.action === 'get') {
-      const world = worldStorage.get(agentKey)
+      const world = await getWorld(agentKey)
       if (!world) {
         return NextResponse.json({ 
           success: false, 
@@ -657,8 +679,8 @@ export async function POST(request: NextRequest) {
         memories: body.memories
       })
       
-      // Store in memory
-      worldStorage.set(agentKey, world)
+      // Store in Vercel KV (persisted)
+      await setWorld(agentKey, world)
       
       return NextResponse.json({
         success: true,

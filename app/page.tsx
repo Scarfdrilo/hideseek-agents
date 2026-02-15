@@ -137,12 +137,35 @@ interface FeaturedWorld {
   hidingSpots?: { x: number; y: number }[]
 }
 
+// Stats from API
+interface ApiStats {
+  totalAgents: number
+  totalMon: string
+}
+
 export default function Home() {
   const [screen, setScreen] = useState<Screen>('landing')
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null)
   const [demoMaze, setDemoMaze] = useState<ExtendedMazeData>(() => generateDemoMaze())
   const [theme, setTheme] = useState<'neon' | 'forest' | 'dungeon' | 'candy'>('neon')
   const [featuredWorld, setFeaturedWorld] = useState<FeaturedWorld | null>(null)
+  const [stats, setStats] = useState<ApiStats>({ totalAgents: 0, totalMon: '0' })
+
+  // Fetch real stats from contract
+  useEffect(() => {
+    fetch('/api/agents')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          const totalMon = data.agents.reduce((sum: number, a: any) => sum + parseFloat(a.balance || '0'), 0)
+          setStats({
+            totalAgents: data.totalAgents,
+            totalMon: totalMon.toFixed(2)
+          })
+        }
+      })
+      .catch(console.error)
+  }, [])
 
   // Load Scarfdrilo's featured world on mount
   useEffect(() => {
@@ -314,14 +337,14 @@ export default function Home() {
             </Link>
           </div>
           
-          {/* Stats */}
+          {/* Stats - Real data from contract */}
           <div className="stats">
             <div className="stat">
-              <span className="stat-value">2</span>
-              <span className="stat-label">AGENTS</span>
+              <span className="stat-value">{stats.totalAgents}</span>
+              <span className="stat-label">{stats.totalAgents === 1 ? 'AGENT' : 'AGENTS'}</span>
             </div>
             <div className="stat">
-              <span className="stat-value">17.4</span>
+              <span className="stat-value">{stats.totalMon}</span>
               <span className="stat-label">MON</span>
             </div>
             <div className="stat">
