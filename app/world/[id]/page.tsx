@@ -406,19 +406,19 @@ export default function WorldPage() {
           )}
           
           <p style={{ margin: '4px 0', fontSize: '12px', color: '#888' }}>
-            Owner: {agent.owner.slice(0, 6)}...{agent.owner.slice(-4)}
+            Owner: {agent.owner ? `${agent.owner.slice(0, 6)}...${agent.owner.slice(-4)}` : 'Unknown'}
           </p>
           <p style={{ margin: '4px 0', fontSize: '12px', color: '#888' }}>
             Theme: <span style={{ color: theme === 'swamp' ? '#33ff99' : '#00ff88' }}>{theme}</span>
           </p>
           
-          {worldData?.memoryElements && worldData.memoryElements.length > 0 && (
+          {worldData?.memoryElements && Array.isArray(worldData.memoryElements) && worldData.memoryElements.length > 0 && (
             <div style={{ marginTop: '12px', borderTop: '1px solid #333', paddingTop: '8px' }}>
               <p style={{ margin: '0 0 4px 0', fontSize: '11px', color: '#666', textTransform: 'uppercase' }}>
                 Memory Elements:
               </p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                {worldData.memoryElements.slice(0, 5).map((el: any, i: number) => (
+                {worldData.memoryElements.slice(0, 5).map((el: any, i: number) => el ? (
                   <span key={i} style={{
                     fontSize: '10px',
                     padding: '2px 6px',
@@ -426,9 +426,9 @@ export default function WorldPage() {
                     borderRadius: '4px',
                     color: '#000',
                   }}>
-                    {el.name}
+                    {el.name || 'Memory'}
                   </span>
-                ))}
+                ) : null)}
               </div>
             </div>
           )}
