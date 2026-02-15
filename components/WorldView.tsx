@@ -101,6 +101,23 @@ export default function WorldView({ data, tileSize = 32 }: WorldViewProps) {
   const appRef = useRef<Application | null>(null)
   const [hoveredZone, setHoveredZone] = useState<Zone | null>(null)
   const [selectedZone, setSelectedZone] = useState<Zone | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  
+  // Safety checks
+  if (!data || !data.zones || !data.paths) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        height: '100%',
+        color: '#ff4444',
+        fontFamily: 'monospace',
+      }}>
+        ⚠️ Error: World data is missing or invalid
+      </div>
+    )
+  }
   
   const colors = THEMES[data.theme] || THEMES.candy
   const tileW = tileSize
@@ -130,24 +147,37 @@ export default function WorldView({ data, tileSize = 32 }: WorldViewProps) {
     if (!containerRef.current) return
 
     const initApp = async () => {
-      // Clean up existing app
-      if (appRef.current) {
-        appRef.current.destroy(true)
-        appRef.current = null
-      }
+      try {
+        // Clean up existing app
+        if (appRef.current) {
+          appRef.current.destroy(true)
+          appRef.current = null
+        }
 
-      const app = new Application()
-      await app.init({
-        width: containerRef.current!.clientWidth,
-        height: containerRef.current!.clientHeight,
-        backgroundColor: colors.ground,
-        antialias: true,
-        resolution: window.devicePixelRatio || 1,
-        autoDensity: true,
-      })
+        // Safety check for container
+        if (!containerRef.current) {
+          console.error('Container not ready')
+          return
+        }
 
-      containerRef.current!.appendChild(app.canvas)
-      appRef.current = app
+        const app = new Application()
+        await app.init({
+          width: containerRef.current.clientWidth || 800,
+          height: containerRef.current.clientHeight || 600,
+          backgroundColor: colors.ground,
+          antialias: true,
+          resolution: window.devicePixelRatio || 1,
+          autoDensity: true,
+        })
+
+        // Check if container still exists after async init
+        if (!containerRef.current) {
+          app.destroy(true)
+          return
+        }
+
+        containerRef.current.appendChild(app.canvas)
+        appRef.current = app
 
       // Main container for all world elements
       const worldContainer = new Container()
@@ -363,17 +393,58 @@ export default function WorldView({ data, tileSize = 32 }: WorldViewProps) {
           }
         })
       }
+      } catch (err) {
+        console.error('WorldView initialization error:', err)
+        setError('Failed to initialize world view')
+      }
     }
 
     initApp()
 
     return () => {
       if (appRef.current) {
-        appRef.current.destroy(true)
+        try {
+          appRef.current.destroy(true)
+        } catch (e) {
+          console.error('Error destroying app:', e)
+        }
         appRef.current = null
       }
     }
   }, [data, colors, toIso, drawTile, tileSize])
+
+  // Show error state
+  if (error) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        flexDirection: 'column',
+        alignItems: 'center', 
+        justifyContent: 'center',
+        height: '100%',
+        color: '#ff4444',
+        fontFamily: 'monospace',
+        padding: 20,
+      }}>
+        <div style={{ fontSize: 48, marginBottom: 16 }}>⚠️</div>
+        <div>{error}</div>
+        <button 
+          onClick={() => window.location.reload()}
+          style={{
+            marginTop: 20,
+            padding: '10px 20px',
+            background: '#333',
+            color: '#fff',
+            border: 'none',
+            borderRadius: 8,
+            cursor: 'pointer',
+          }}
+        >
+          Recargar página
+        </button>
+      </div>
+    )
+  }
 
   return (
     <div 
