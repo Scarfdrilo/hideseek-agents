@@ -23,8 +23,8 @@ const IsometricMaze = dynamic(() => import('@/components/IsometricMaze'), {
   ),
 })
 
-// Use SimpleWorldView (CSS-based) instead of WebGL WorldView to avoid crashes
-const SimpleWorldView = dynamic(() => import('@/components/SimpleWorldView'), {
+// WorldView with PixiJS (pretty but can crash on some browsers)
+const WorldView = dynamic(() => import('@/components/WorldView'), {
   ssr: false,
   loading: () => (
     <div style={{ 
@@ -38,6 +38,11 @@ const SimpleWorldView = dynamic(() => import('@/components/SimpleWorldView'), {
       ✨ Generating world...
     </div>
   ),
+})
+
+// Fallback CSS-based view (simple but always works)
+const SimpleWorldView = dynamic(() => import('@/components/SimpleWorldView'), {
+  ssr: false,
 })
 
 interface AgentData {
@@ -355,7 +360,7 @@ export default function WorldPage() {
               ⏳ Cargando mundo...
             </div>
           ) : worldData?.zones ? (
-            <SimpleWorldView data={worldData} />
+            <WorldView data={worldData} tileSize={32} />
           ) : (
             <div style={{ 
               display: 'flex', 
