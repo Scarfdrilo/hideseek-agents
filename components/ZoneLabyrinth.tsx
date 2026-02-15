@@ -338,14 +338,18 @@ export default function ZoneLabyrinth({ zone, onClose }: ZoneLabyrinthProps) {
     }
   }, [zone, zoneColor, playerPos, tileSize])
 
-  // Joystick handlers
+  // Joystick handlers - Fixed for Safari iOS
   const handleJoystickStart = (e: React.TouchEvent) => {
+    e.preventDefault() // Prevent scroll on Safari
+    e.stopPropagation()
     const touch = e.touches[0]
     setTouchStart({ x: touch.clientX, y: touch.clientY })
     setJoystickActive(true)
   }
 
   const handleJoystickMove = (e: React.TouchEvent) => {
+    e.preventDefault() // Prevent scroll on Safari
+    e.stopPropagation()
     if (!touchStart) return
     const touch = e.touches[0]
     const dx = (touch.clientX - touchStart.x) / 50
@@ -356,7 +360,9 @@ export default function ZoneLabyrinth({ zone, onClose }: ZoneLabyrinthProps) {
     })
   }
 
-  const handleJoystickEnd = () => {
+  const handleJoystickEnd = (e: React.TouchEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
     setTouchStart(null)
     setJoystickActive(false)
     setJoystickDir({ x: 0, y: 0 })
@@ -436,7 +442,7 @@ export default function ZoneLabyrinth({ zone, onClose }: ZoneLabyrinthProps) {
         }}
       />
 
-      {/* Mobile Joystick */}
+      {/* Mobile Joystick - Safari iOS compatible */}
       <div
         style={{
           position: 'absolute',
@@ -445,13 +451,18 @@ export default function ZoneLabyrinth({ zone, onClose }: ZoneLabyrinthProps) {
           width: '120px',
           height: '120px',
           borderRadius: '50%',
-          background: 'rgba(255,255,255,0.1)',
-          border: `2px solid ${zone.color}`,
+          background: 'rgba(255,255,255,0.15)',
+          border: `3px solid ${zone.color}`,
           touchAction: 'none',
+          WebkitTouchCallout: 'none',
+          WebkitUserSelect: 'none',
+          userSelect: 'none',
+          WebkitTapHighlightColor: 'transparent',
         }}
         onTouchStart={handleJoystickStart}
         onTouchMove={handleJoystickMove}
         onTouchEnd={handleJoystickEnd}
+        onTouchCancel={handleJoystickEnd}
       >
         {/* Joystick knob */}
         <div
@@ -459,13 +470,15 @@ export default function ZoneLabyrinth({ zone, onClose }: ZoneLabyrinthProps) {
             position: 'absolute',
             top: '50%',
             left: '50%',
-            width: '50px',
-            height: '50px',
+            width: '60px',
+            height: '60px',
             borderRadius: '50%',
             background: zone.color,
-            transform: `translate(${-25 + joystickDir.x * 30}px, ${-25 + joystickDir.y * 30}px)`,
-            opacity: joystickActive ? 1 : 0.5,
+            boxShadow: `0 0 20px ${zone.color}`,
+            transform: `translate(${-30 + joystickDir.x * 25}px, ${-30 + joystickDir.y * 25}px)`,
+            opacity: joystickActive ? 1 : 0.6,
             transition: joystickActive ? 'none' : 'transform 0.2s',
+            pointerEvents: 'none',
           }}
         />
       </div>
