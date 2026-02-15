@@ -151,17 +151,20 @@ const KNOWN_AGENTS = ['scarfdrilo']
 export default function WorldPage() {
   const params = useParams()
   const id = params.id as string
-  const isNamedWorld = KNOWN_AGENTS.includes(id.toLowerCase())
-  const agentId = isNamedWorld ? 0 : parseInt(id, 10)
+  const isKnownAgent = KNOWN_AGENTS.includes(id.toLowerCase())
+  const isNumericId = /^\d+$/.test(id)
+  const isNamedWorld = isKnownAgent || !isNumericId // Treat non-numeric IDs as named worlds
+  const agentId = isNumericId ? parseInt(id, 10) : 0 // Only parse if numeric
   
   const [agent, setAgent] = useState<AgentData | null>(null)
   const [worldData, setWorldData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   
-  // Default maze (used if no custom world loaded)
-  const defaultMazeData = generateMaze(agentId * 12345)
-  const defaultTheme = getThemeFromId(agentId)
+  // Default maze (used if no custom world loaded) - use 0 for named worlds
+  const safeAgentId = isNaN(agentId) ? 0 : agentId
+  const defaultMazeData = generateMaze(safeAgentId * 12345)
+  const defaultTheme = getThemeFromId(safeAgentId)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -211,7 +214,14 @@ export default function WorldPage() {
           }
         }
         
-        // Fallback to API for on-chain agents
+        // For named worlds that don't exist in API or static files
+        if (!isNumericId) {
+          setError(`World "${id}" not found. Create it first using the API.`)
+          setLoading(false)
+          return
+        }
+        
+        // Fallback to API for on-chain agents (only for numeric IDs)
         const res = await fetch('/api/agents')
         const data = await res.json()
         
@@ -234,7 +244,7 @@ export default function WorldPage() {
     }
     
     fetchData()
-  }, [id, agentId, isNamedWorld])
+  }, [id, agentId, isNamedWorld, isNumericId])
   
   // Use loaded world data or fall back to generated maze
   const mazeData = worldData ? {
