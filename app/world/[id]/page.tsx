@@ -23,7 +23,8 @@ const IsometricMaze = dynamic(() => import('@/components/IsometricMaze'), {
   ),
 })
 
-const WorldView = dynamic(() => import('@/components/WorldView'), {
+// Use SimpleWorldView (CSS-based) instead of WebGL WorldView to avoid crashes
+const SimpleWorldView = dynamic(() => import('@/components/SimpleWorldView'), {
   ssr: false,
   loading: () => (
     <div style={{ 
@@ -347,9 +348,9 @@ export default function WorldPage() {
           entryFee={agent?.entryFeeFormatted?.replace(' MON', '') || '0.003'}
         >
           <div style={{ height: 'calc(100vh - 100px)' }}>
-            {/* Use WorldView for zone-based worlds, IsometricMaze for maze-based */}
+            {/* Use SimpleWorldView for zone-based worlds (CSS-based, no WebGL crashes) */}
             {worldData?.zones ? (
-              <WorldView data={worldData} tileSize={36} />
+              <SimpleWorldView data={worldData} />
             ) : (
               <IsometricMaze data={mazeData} theme={theme} tileSize={40} />
             )}
