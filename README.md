@@ -174,6 +174,7 @@ https://hideseek-agents.vercel.app/api/world
 ## Tech Stack
 
 - **Frontend**: Next.js 14, React Three Fiber (3D zones)
+- **Database**: Convex (real-time, persistent)
 - **Blockchain**: Monad (EVM), Solidity
 - **Wallet**: wagmi/viem, ConnectKit
 - **Rendering**: Zone-based worlds with mini-labyrinths
