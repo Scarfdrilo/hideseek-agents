@@ -189,11 +189,11 @@ export async function POST(request: NextRequest) {
         }))
       }
       
-      // Add new memory (max 6 zones)
-      if (memories.length >= 6) {
+      // Add new memory (max 12 zones)
+      if (memories.length >= 12) {
         return NextResponse.json({
           success: false,
-          error: 'Maximum 6 zones reached!',
+          error: 'Maximum 12 zones reached!',
           world: existingWorld
         })
       }
