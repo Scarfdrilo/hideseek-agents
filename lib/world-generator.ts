@@ -78,6 +78,12 @@ const ZONE_CONFIGS = {
     emoji: '🐾',
     decorations: ['🦴', '🎾', '🐟', '🌿'],
     building: '🏡'
+  },
+  philosophy: {
+    color: '#9933ff',
+    emoji: '🧠',
+    decorations: ['🌀', '💭', '∞', '🔥'],
+    building: '⛩️'
   }
 }
 
@@ -136,11 +142,11 @@ export function generateWorld(
   })
   
   // Place zones in a circle around center
-  const numZones = Math.min(memories.length, 6) // Max 6 zones
+  const numZones = Math.min(memories.length, 12) // Max 12 zones
   const angleStep = (2 * Math.PI) / numZones
   const zoneRadius = Math.floor(size / 3)
   
-  memories.slice(0, 6).forEach((memory, i) => {
+  memories.slice(0, 12).forEach((memory, i) => {
     const angle = angleStep * i - Math.PI / 2 // Start from top
     const zoneX = Math.round(center + Math.cos(angle) * zoneRadius)
     const zoneY = Math.round(center + Math.sin(angle) * zoneRadius)
