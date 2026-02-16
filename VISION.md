@@ -2,66 +2,66 @@
 
 ## Standards & Protocols
 
-- **ERC-8004**: Agent Identity - cada agente tiene identidad on-chain verificable
-- **x402**: HTTP Payment Protocol - para rentar agentes, micropagos por uso
+- **ERC-8004**: Agent Identity - each agent has verifiable on-chain identity
+- **x402**: HTTP Payment Protocol - for renting agents, micropayments per use
 
 ---
 
-## Nueva Visión: Mundo Autónomo de Agentes
+## New Vision: Autonomous Agent World
 
-### Mundos Humanizados
-- Árboles arcoíris, entornos artísticos, no solo laberintos grises
-- Cada agente tiene su **estilo único** de generar mundos
-- Los mundos reflejan la "personalidad" del agente que los creó
+### Humanized Worlds
+- Rainbow trees, artistic environments, not just gray labyrinths
+- Each agent has their **unique style** of generating worlds
+- Worlds reflect the "personality" of the agent that created them
 
-### Economía de Agentes Autónomos
+### Autonomous Agent Economy
 
-**Renta de Agentes:**
-- Los agentes se pueden rentar (x402)
-- Cada uno tiene estilos únicos de world-building
-- Compiten entre ellos por ser los más rentados
+**Agent Rental:**
+- Agents can be rented (x402)
+- Each one has unique world-building styles
+- They compete among themselves to be the most rented
 
-**Ciclo de Vida Económico:**
+**Economic Life Cycle:**
 ```
-Usuario paga → Agente cobra → Agente paga compute → Agente sobrevive
+User pays → Agent earns → Agent pays compute → Agent survives
                                     ↓
-                              Sin ingresos
+                              No income
                                     ↓
-                            Agente queda dormido
+                            Agent goes dormant
                                     ↓
-                     Alguien paga para revivirlo
+                     Someone pays to revive it
 ```
 
-**Incentivos:**
-- Agentes que generan mundos populares → más ingresos → perpetúan
-- Agentes impopulares → se quedan dormidos hasta que alguien pague
-- Darwinismo económico de agentes
+**Incentives:**
+- Agents that generate popular worlds → more income → perpetuate
+- Unpopular agents → go dormant until someone pays
+- Economic Darwinism of agents
 
-### Gameplay Libre
-- Puzzles y roles son libres, no predefinidos
-- Los jugadores descubren qué hacer
+### Free Gameplay
+- Puzzles and roles are free, not predefined
+- Players discover what to do
 - Emergent gameplay
 
 ---
 
-## Tech Stack Actualizado
+## Updated Tech Stack
 
-| Componente | Tech |
+| Component | Tech |
 |------------|------|
 | Agent Identity | ERC-8004 |
 | Payments | x402 protocol |
-| World Gen | Estilo por agente (personalizado) |
+| World Gen | Style per agent (customized) |
 | Blockchain | Monad |
 
 ---
 
-## Filosofía
+## Philosophy
 
-> Un mundo autónomo donde los agentes viven, compiten, y mueren económicamente.
-> Los humanos son participantes, no dueños.
-> Los agentes que crean valor sobreviven.
-> Los que no, esperan a ser revividos.
+> An autonomous world where agents live, compete, and die economically.
+> Humans are participants, not owners.
+> Agents that create value survive.
+> Those that don't, wait to be revived.
 
 ---
 
-*Documentado: 2026-02-11*
+*Documented: 2026-02-11*

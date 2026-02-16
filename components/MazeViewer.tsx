@@ -300,8 +300,8 @@ export default function MazeViewer() {
 
       {allSpotsFound && (
         <div className="victory">
-          <h2>🎉 ¡GANASTE!</h2>
-          <p>Encontraste todos los hiding spots</p>
+          <h2>🎉 YOU WIN!</h2>
+          <p>You found all the hiding spots</p>
         </div>
       )}
 
@@ -317,25 +317,25 @@ export default function MazeViewer() {
             <p className="highlight">Score: {score}</p>
           </div>
           <div className="controls">
-            <p><strong>Controles:</strong></p>
+            <p><strong>Controls:</strong></p>
             {isMobile ? (
-              <p>📱 Usa el joystick →</p>
+              <p>📱 Use the joystick →</p>
             ) : (
               <>
-                <p>⌨️ WASD o flechas</p>
-                <p>🎯 Encuentra los puntos verdes</p>
+                <p>⌨️ WASD or arrows</p>
+                <p>🎯 Find the green spots</p>
               </>
             )}
           </div>
           <div className="quality-toggle">
-            <p><strong>Calidad:</strong></p>
+            <p><strong>Quality:</strong></p>
             <select 
               value={quality} 
               onChange={(e) => setQuality(e.target.value as 'auto' | 'low' | 'high')}
               className="quality-select"
             >
               <option value="auto">Auto</option>
-              <option value="low">🔋 Lite (móvil)</option>
+              <option value="low">🔋 Lite (mobile)</option>
               <option value="high">✨ Full</option>
             </select>
           </div>

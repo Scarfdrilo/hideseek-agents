@@ -253,7 +253,7 @@ export default function PaymentGate({ agentId, worldName, entryFee = '0.003', ch
         </h1>
         
         <p style={{ color: '#888', marginBottom: 24, fontSize: 14 }}>
-          Este mundo requiere pago para acceder
+          This world requires payment to access
         </p>
         
         <div style={{
@@ -278,7 +278,7 @@ export default function PaymentGate({ agentId, worldName, entryFee = '0.003', ch
         {!isConnected ? (
           <div>
             <p style={{ color: '#666', fontSize: 12, marginBottom: 16 }}>
-              Conecta tu wallet para continuar
+              Connect your wallet to continue
             </p>
             <ConnectKitButton.Custom>
               {({ show }) => (
@@ -305,7 +305,7 @@ export default function PaymentGate({ agentId, worldName, entryFee = '0.003', ch
           </div>
         ) : isChecking ? (
           <div style={{ color: '#888' }}>
-            ⏳ Verificando acceso...
+            ⏳ Verifying access...
           </div>
         ) : (
           <div>
@@ -329,15 +329,15 @@ export default function PaymentGate({ agentId, worldName, entryFee = '0.003', ch
                 width: '100%',
               }}
             >
-              {isWritePending ? '⏳ Confirmando...' : 
-               isTxLoading ? '⏳ Procesando...' :
-               isTxSuccess ? '✅ ¡Pagado!' :
-               `💰 Pagar ${entryFee} MON`}
+              {isWritePending ? '⏳ Confirming...' : 
+               isTxLoading ? '⏳ Processing...' :
+               isTxSuccess ? '✅ Paid!' :
+               `💰 Pay ${entryFee} MON`}
             </button>
             
             {isTxSuccess && (
               <p style={{ color: '#00ff88', fontSize: 12, marginTop: 12 }}>
-                ✅ Pago exitoso! Cargando mundo...
+                ✅ Payment successful! Loading world...
               </p>
             )}
             

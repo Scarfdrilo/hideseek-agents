@@ -357,7 +357,7 @@ export default function WorldPage() {
               color: '#00ff88',
               fontFamily: 'monospace',
             }}>
-              ⏳ Cargando mundo...
+              ⏳ Loading world...
             </div>
           ) : worldData?.zones ? (
             <PaymentGate 

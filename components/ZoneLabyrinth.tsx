@@ -106,7 +106,7 @@ export default function ZoneLabyrinth({ zone, onClose }: ZoneLabyrinthProps) {
         // Check if reached exit
         if (maze[newY][newX] === 'EXIT') {
           setTimeout(() => {
-            alert(`🎉 ¡Completaste el laberinto de ${zone.name}!`)
+            alert(`🎉 You completed the labyrinth of ${zone.name}!`)
             onClose()
           }, 100)
         }
@@ -156,7 +156,7 @@ export default function ZoneLabyrinth({ zone, onClose }: ZoneLabyrinthProps) {
             // Check if reached exit
             if (maze[newY][newX] === 'EXIT') {
               setTimeout(() => {
-                alert(`🎉 ¡Completaste el laberinto de ${zone.name}!`)
+                alert(`🎉 You completed the labyrinth of ${zone.name}!`)
                 onClose()
               }, 100)
             }
@@ -374,7 +374,7 @@ export default function ZoneLabyrinth({ zone, onClose }: ZoneLabyrinthProps) {
             fontSize: '14px',
           }}
         >
-          ✕ CERRAR (ESC)
+          ✕ CLOSE (ESC)
         </button>
       </div>
 
@@ -387,7 +387,7 @@ export default function ZoneLabyrinth({ zone, onClose }: ZoneLabyrinthProps) {
         fontFamily: 'monospace',
         textAlign: 'center',
       }}>
-        🎮 WASD o ↑↓←→ para moverte | Llega a la 🚪 para completar
+        🎮 WASD or ↑↓←→ to move | Reach the 🚪 to complete
       </div>
 
       {/* Maze container */}
@@ -517,7 +517,7 @@ export default function ZoneLabyrinth({ zone, onClose }: ZoneLabyrinthProps) {
         fontSize: '12px',
         fontFamily: 'monospace',
       }}>
-        📱 Usa el D-pad para moverte
+        📱 Use the D-pad to move
       </div>
     </div>
   )

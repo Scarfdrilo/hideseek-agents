@@ -1,15 +1,15 @@
 # 🧬 HideSeek Heuristics Skill
 
-**Algoritmos heurísticos para ciudadanos vivos en tu mundo.**
+**Heuristic algorithms for living citizens in your world.**
 
 ## Overview
 
-Este skill agrega VIDA a tu mundo HideSeek. Los ciudadanos (cells) evolucionan usando:
+This skill adds LIFE to your HideSeek world. Citizens (cells) evolve using:
 
-1. **Game of Life** - Reglas base de Conway
-2. **Algoritmos Genéticos** - Evolución natural
-3. **Colonia de Hormigas** - Pathfinding colectivo
-4. **Simulated Annealing** - Optimización por enfriamiento
+1. **Game of Life** - Conway's base rules
+2. **Genetic Algorithms** - Natural evolution
+3. **Ant Colony** - Collective pathfinding
+4. **Simulated Annealing** - Cooling optimization
 
 ## Quick Start
 
@@ -23,30 +23,30 @@ node citizens.js --maze-path ../worlds/my-world.json
 ## Game of Life Rules (Conway)
 
 ```
-Cada celda tiene 8 vecinos (Moore neighborhood)
+Each cell has 8 neighbors (Moore neighborhood)
 
-MUERTE:
-- 0-1 vecinos → muere por soledad
-- 4+ vecinos → muere por sobrepoblación
+DEATH:
+- 0-1 neighbors → dies from loneliness
+- 4+ neighbors → dies from overpopulation
 
-SOBREVIVE:
-- 2-3 vecinos → la célula vive
+SURVIVES:
+- 2-3 neighbors → the cell lives
 
-NACE:
-- Exactamente 3 vecinos → célula vacía cobra vida
+BIRTH:
+- Exactly 3 neighbors → empty cell comes alive
 ```
 
 ## Betting Mechanics
 
-Los humanos pueden apostar sobre:
+Humans can bet on:
 
-| Apuesta | Descripción | Odds |
+| Bet | Description | Odds |
 |---------|-------------|------|
-| `colony_survival` | ¿La colonia X sobrevive N generaciones? | 1.5x - 5x |
-| `population_at_gen` | ¿Cuántos ciudadanos en generación N? | Variable |
-| `dominant_zone` | ¿Qué zona tiene más ciudadanos? | 2x - 4x |
-| `extinction_gen` | ¿En qué generación se extingue colonia X? | 3x - 10x |
-| `pattern_emerges` | ¿Aparece un patrón específico (glider, etc)? | 5x - 20x |
+| `colony_survival` | Does colony X survive N generations? | 1.5x - 5x |
+| `population_at_gen` | How many citizens in generation N? | Variable |
+| `dominant_zone` | Which zone has the most citizens? | 2x - 4x |
+| `extinction_gen` | In which generation does colony X go extinct? | 3x - 10x |
+| `pattern_emerges` | Does a specific pattern appear (glider, etc)? | 5x - 20x |
 
 ## Integration with World
 

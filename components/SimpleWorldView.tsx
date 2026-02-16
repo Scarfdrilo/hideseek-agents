@@ -231,7 +231,7 @@ export default function SimpleWorldView({ data }: SimpleWorldViewProps) {
             🎮 {selectedZone.name || 'Zone'}
           </h3>
           <p style={{ color: '#888', margin: 0, fontSize: 14 }}>
-            {selectedZone.description || 'Explora esta zona del mundo'}
+            {selectedZone.description || 'Explore this zone of the world'}
           </p>
           <button
             onClick={() => setSelectedZone(null)}
@@ -246,7 +246,7 @@ export default function SimpleWorldView({ data }: SimpleWorldViewProps) {
               fontWeight: 'bold',
             }}
           >
-            Cerrar
+            Close
           </button>
         </div>
       )})()}

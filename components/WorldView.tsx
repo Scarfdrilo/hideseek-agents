@@ -272,7 +272,7 @@ export default function WorldView({ data, tileSize = 32 }: WorldViewProps) {
           fontSize: 10,
           fill: parseInt(zone.color.replace('#', ''), 16),
         })
-        const hint = new Text({ text: '▶ ENTRAR', style: hintStyle })
+        const hint = new Text({ text: '▶ ENTER', style: hintStyle })
         hint.anchor.set(0.5)
         hint.position.set(zx, zy + tileSize * 1.8)
         zoneContainer.addChild(hint)
@@ -440,7 +440,7 @@ export default function WorldView({ data, tileSize = 32 }: WorldViewProps) {
             cursor: 'pointer',
           }}
         >
-          Recargar página
+          Reload page
         </button>
       </div>
     )
@@ -479,7 +479,7 @@ export default function WorldView({ data, tileSize = 32 }: WorldViewProps) {
             </div>
           )}
           <div style={{ fontSize: 11, color: hoveredZone.color }}>
-            ▶ Click para explorar el laberinto
+            ▶ Click to explore the labyrinth
           </div>
         </div>
       )}
@@ -497,7 +497,7 @@ export default function WorldView({ data, tileSize = 32 }: WorldViewProps) {
         fontFamily: 'monospace',
         fontSize: 12,
       }}>
-        👆 Haz click en una zona para explorar su laberinto
+        👆 Click on a zone to explore its labyrinth
       </div>
 
       {/* Zone Labyrinth Modal */}

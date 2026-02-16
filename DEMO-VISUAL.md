@@ -22,14 +22,14 @@
 └────────────────────────────────────────────────────────┘
 ```
 
-**Colores:**
-- Background: Negro con gradiente (#1a1a1a → #0a0a0a)
-- Título: Gradiente verde-azul brillante (#00ff88 → #00aaff)
-- Botón: Verde neón con efecto glow
+**Colors:**
+- Background: Black with gradient (#1a1a1a → #0a0a0a)
+- Title: Bright green-blue gradient (#00ff88 → #00aaff)
+- Button: Neon green with glow effect
 
 ---
 
-## 3D Maze View (Después de click en Play Demo)
+## 3D Maze View (After clicking Play Demo)
 
 ```
 ┌────────────────────────────────────────────────────────┐
@@ -69,25 +69,25 @@
 └────────────────────────────────────────────────────────┘
 ```
 
-**Elementos 3D:**
-- **Walls**: Cubos grises (#333), altura 2 unidades, sombras
-- **Floor**: Placas negras (#222), altura 0.1 unidades
-- **Start**: Floor azul (#00aaff) con glow
-- **Hiding Spots**: Esferas verdes (#00ff88) flotando, emissive glow
-- **Ground Plane**: Negro total (#111), 100x100 unidades
+**3D Elements:**
+- **Walls**: Gray cubes (#333), height 2 units, shadows
+- **Floor**: Black plates (#222), height 0.1 units
+- **Start**: Blue floor (#00aaff) with glow
+- **Hiding Spots**: Green spheres (#00ff88) floating, emissive glow
+- **Ground Plane**: Total black (#111), 100x100 units
 - **Lighting**: 
-  - Luz ambiental suave
-  - Luz direccional desde arriba-derecha
-  - Point light desde esquina opuesta
+  - Soft ambient light
+  - Directional light from upper-right
+  - Point light from opposite corner
 
-**Controles:**
-- Arrastra con mouse: Rota cámara alrededor del maze
-- Click derecho + arrastra: Mueve (pan) la vista
-- Scroll: Zoom in/out (límites: 10-50 unidades)
+**Controls:**
+- Drag with mouse: Rotate camera around the maze
+- Right-click + drag: Move (pan) the view
+- Scroll: Zoom in/out (limits: 10-50 units)
 
 ---
 
-## Mapas Generados (ASCII Preview)
+## Generated Maps (ASCII Preview)
 
 ### Map 1 - EASY (15x15)
 
